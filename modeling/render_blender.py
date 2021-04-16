@@ -49,33 +49,33 @@ def main(args):
 
     blender.disable_splash()
 
-    working_dirname = args[0]
-    input_filename = args[1]
-    output_filename = args[2]
+    # working_dirname = args[0]
+    input_filename = args[0]
+    output_filename = args[1]
 
-    print('working dirname:', working_dirname)
+    # print('working dirname:', working_dirname)
     print('input filename: ', input_filename)
     print('output filename:', output_filename)
 
-    input_filename = os.path.join(working_dirname, input_filename)
-    output_filename = os.path.join(working_dirname, output_filename)
+    # input_filename = os.path.join(working_dirname, input_filename)
+    # output_filename = os.path.join(working_dirname, output_filename)
 
     # ~~~~ load input json
 
     with open(input_filename, 'r') as json_file:
-        data = json.load(json_file)
+        config = json.load(json_file)
 
-    scale = data.get('pos_scale', 1.5)
-    center = data['center']
-    model_color = data['model_color']
-    auto_smooth_angle = data['auto_smooth_angle']
+    scale = config.get('pos_scale', 1.5)
+    center = config['center']
+    model_color = config['model_color']
+    auto_smooth_angle = config['auto_smooth_angle']
 
     # a couple of hard-coded things for now
     clip_scale = 4.0
-    sun_energy = 25.0
+    sun_energy = config.get('sun_energy', 25.0)
 
-    pos = data['size'] * scale
-    clip_end = data['size'] * clip_scale
+    pos = config['size'] * scale
+    clip_end = config['size'] * clip_scale
 
     obj_loc = (-center[0], -center[1], -center[2])
     cam_pos = (pos * 0.75, pos * 1.5, pos * 0.5)
@@ -88,7 +88,7 @@ def main(args):
 
     # ~~~~ load OBJ file
 
-    obj = import_obj(data['model_filename'])
+    obj = import_obj(config['model_filename'])
 
     # enable smooth shading
     obj.data.use_auto_smooth = True
@@ -130,7 +130,7 @@ def main(args):
         samples=CYCLES_RENDER_SAMPLES,
         preview_samples=CYCLES_PREVIEW_SAMPLES)
 
-    bpy.context.scene.render.filepath = working_dirname + '/'
+    # bpy.context.scene.render.filepath = working_dirname + '/'
     # bpy.context.scene.cycles.use_denoising = True
     bpy.context.scene.view_settings.look = 'Medium High Contrast'
 
