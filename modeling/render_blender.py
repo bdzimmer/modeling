@@ -7,8 +7,8 @@ Use Blender to render a model to a PNG.
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
 import json
-import os
 import sys
+from typing import Any, Dict, Optional
 import math
 
 import bpy
@@ -24,11 +24,11 @@ from modeling import blender
 
 
 DO_RENDER = True
-DO_QUIT = True
+DO_QUIT = False
 INTERACTIVE_RENDER = False
 
 
-CYCLES_RENDER_SAMPLES = 8
+CYCLES_RENDER_SAMPLES = 32
 CYCLES_PREVIEW_SAMPLES = 8
 
 
@@ -65,19 +65,21 @@ def main(args):
     with open(input_filename, 'r') as json_file:
         config = json.load(json_file)
 
-    scale = config.get('pos_scale', 1.5)
-    center = config['center']
-    model_color = config['model_color']
-    auto_smooth_angle = config['auto_smooth_angle']
-
     # a couple of hard-coded things for now
     clip_scale = 4.0
     sun_energy = config.get('sun_energy', 25.0)
 
-    pos = config['size'] * scale
-    clip_end = config['size'] * clip_scale
+    # some hard-coded stuff for working with the first model
 
-    obj_loc = (-center[0], -center[1], -center[2])
+    model_config = config['models'][0]
+
+    scale = model_config.get('pos_scale', 1.5)
+    center = model_config['center']
+
+    pos = model_config['size'] * scale
+    clip_end = model_config['size'] * clip_scale
+
+    root_obj_loc = (-center[0], -center[1], -center[2])
     cam_pos = (pos * 0.75, pos * 1.5, pos * 0.5)
     sun_pos = (pos, pos * 0.25, pos * 0.3)
 
@@ -88,15 +90,9 @@ def main(args):
 
     # ~~~~ load OBJ file
 
-    obj = import_obj(config['model_filename'])
-
-    # enable smooth shading
-    obj.data.use_auto_smooth = True
-    obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
-    bpy.ops.object.shade_smooth()
-
-    obj.location = obj_loc
-    bpy.data.materials['Default OBJ'].node_tree.nodes['Principled BSDF'].inputs[0].default_value = model_color
+    # for now, just load starting from the first model
+    root_obj = add_model(config['models'][0], None)
+    root_obj.location = root_obj_loc
 
     # ~~~~ Camera
 
@@ -105,7 +101,7 @@ def main(args):
     cam.name = "Camera"
     cam.location = cam_pos
     cam.data.clip_end = clip_end
-    blender.point_at(cam, obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
     bpy.context.scene.camera = cam
 
     # ~~~~ Light
@@ -117,7 +113,7 @@ def main(args):
         energy=sun_energy,
         angle=0.0,  # 10.0 * math.pi / 180.0,
     )
-    blender.point_at(sun, obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    blender.point_at(sun, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
 
     # ~~~~ render settings
 
@@ -145,6 +141,55 @@ def main(args):
 
     if DO_QUIT:
         blender.quit()
+
+
+def add_model(
+        model_config: Dict[str, Any],
+        parent: Optional[bpy.types.Object]) -> bpy.types.Object:
+    """add a model to the blender scene"""
+
+    # Note that some logic in here for material assumes that model names are unique.
+
+    obj = import_obj(model_config['filename'])
+    name = model_config['name']
+    obj.name = name
+
+    if parent is not None:
+        obj.parent = parent
+        # TODO: is there another step required to make transforms relative???
+
+    transformation = model_config.get('transformation')
+    if transformation is not None:
+        # for now just translation. rotation later
+        obj.location = transformation['translation']
+
+    # enable smooth shading
+    auto_smooth_angle = model_config.get('auto_smooth_angle')
+    if auto_smooth_angle is not None:
+        obj.data.use_auto_smooth = True
+        obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
+        bpy.ops.object.shade_smooth()
+
+    color = model_config.get('color')
+
+    # create a new material for the object
+    # not sure this is correct
+    # material = bpy.data.materials['Default OBJ']
+    material = bpy.data.materials.new(name=name)
+    material.use_nodes = True
+    if obj.data.materials:
+        obj.data.materials[0] = material
+    else:
+        obj.data.materials.append(material)
+
+    if color is not None:
+        material.node_tree.nodes['Principled BSDF'].inputs[0].default_value = color
+
+    children = model_config.get('children', [])
+    for child in children:
+        add_model(child, obj)
+
+    return obj
 
 
 main(blender.find_args(sys.argv))
