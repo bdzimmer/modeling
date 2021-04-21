@@ -5,6 +5,7 @@ Use Blender to render a model to a PNG.
 """
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
+import os
 
 import json
 import sys
@@ -22,13 +23,11 @@ if CODE_DIRNAME not in sys.path:
 
 from modeling import blender
 
-
 DO_RENDER = True
-DO_QUIT = False
-INTERACTIVE_RENDER = False
+DO_QUIT = True
 
 
-CYCLES_RENDER_SAMPLES = 32
+CYCLES_RENDER_SAMPLES = 8
 CYCLES_PREVIEW_SAMPLES = 8
 
 
@@ -49,21 +48,19 @@ def main(args):
 
     blender.disable_splash()
 
-    # working_dirname = args[0]
     input_filename = args[0]
     output_filename = args[1]
+    output_filename_prefix = os.path.splitext(output_filename)[0]
 
-    # print('working dirname:', working_dirname)
     print('input filename: ', input_filename)
     print('output filename:', output_filename)
-
-    # input_filename = os.path.join(working_dirname, input_filename)
-    # output_filename = os.path.join(working_dirname, output_filename)
 
     # ~~~~ load input json
 
     with open(input_filename, 'r') as json_file:
         config = json.load(json_file)
+
+    do_outline = config.get('do_outline', False)
 
     # a couple of hard-coded things for now
     clip_scale = 4.0
@@ -92,16 +89,27 @@ def main(args):
 
     # for now, just load starting from the first model
     root_obj = add_model(config['models'][0], None)
+
+    # TODO: do this with some kind of offset instead
     root_obj.location = root_obj_loc
 
-    # ~~~~ Camera
+    # ~~~~ origin object
+
+    origin_obj = bpy.data.objects.new('origin', None)
+    bpy.context.scene.collection.objects.link(origin_obj)
+    origin_obj.location = (0, 0, 0)
+
+    # ~~~~ camera
 
     bpy.ops.object.camera_add()
     cam = bpy.context.object
     cam.name = "Camera"
     cam.location = cam_pos
     cam.data.clip_end = clip_end
-    blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+
+    # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    blender.point_at(cam, origin_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+
     bpy.context.scene.camera = cam
 
     # ~~~~ Light
@@ -117,30 +125,83 @@ def main(args):
 
     # ~~~~ render settings
 
-    # set black background
-    background = bpy.context.scene.world.node_tree.nodes['Background']
-    background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
+    scene = bpy.context.scene
 
+    # set background color
+
+    # background = scene.world.node_tree.nodes['Background']
+    # background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
+    scene.render.film_transparent = True
+
+    scene.render.engine = 'CYCLES'
     blender.configure_cycles(
-        bpy.context.scene,
+        scene,
         samples=CYCLES_RENDER_SAMPLES,
         preview_samples=CYCLES_PREVIEW_SAMPLES)
 
     # bpy.context.scene.render.filepath = working_dirname + '/'
     # bpy.context.scene.cycles.use_denoising = True
-    bpy.context.scene.view_settings.look = 'Medium High Contrast'
+    scene.view_settings.look = 'Medium High Contrast'
 
     if DO_RENDER:
-        print('rendering...', end='', flush=True)
-        if INTERACTIVE_RENDER:
-            bpy.ops.render.render("INVOKE_DEFAULT", animation=False, write_still=True)
-        else:
-            bpy.ops.render.render()
-            bpy.data.images["Render Result"].save_render(filepath=output_filename)
-        print('done')
+
+        # standard render
+        render(output_filename)
+
+        if do_outline:
+            # WIP: outline mode for schematics
+
+            # TODO: disable rendering everything except freestyle
+            scene.render.engine = 'BLENDER_EEVEE'
+
+            set_render_outlines(scene, line_thickness=1.0)
+            cam.data.type = 'ORTHO'
+            cam.data.clip_start = 0
+            cam.data.clip_end = pos * 2.0
+            cam.data.ortho_scale = pos * 1.2
+
+            # root_obj.location = (0, 0, 0)
+
+            for name, cam_pos, up_dir in [
+                    ('pos_x', (1, 0, 0), 'UP_Y'),
+                    ('pos_y', (0, 1, 0), 'UP_Y'),
+                    ('neg_y', (0, -1, 0), 'UP_Y'),
+                    ('pos_z', (0, 0, 1), 'UP_X'),
+                    ('neg_z', (0, 0, -1), 'UP_X')]:
+                print(name)
+                cam_pos = (
+                    cam_pos[0] * pos,
+                    cam_pos[1] * pos,
+                    cam_pos[2] * pos)
+                cam.location = cam_pos
+                blender.point_at(cam, origin_obj, 'TRACK_NEGATIVE_Z', up_dir)
+                render(output_filename_prefix + '_outline_' + name + '.png')
 
     if DO_QUIT:
         blender.quit()
+
+
+def set_render_outlines(scene: bpy.types.Scene, line_thickness: float) -> None:
+    """set up a scene for rendering outlines using freestyle"""
+    scene.use_nodes = True
+    scene.render.use_freestyle = True
+    scene.render.line_thickness = line_thickness
+
+    # TODO: other relevant freestyle settings
+    scene.view_layers['View Layer'].freestyle_settings.as_render_pass = True
+
+    blender.add_link(
+        scene,
+        (scene.node_tree.nodes['Render Layers'], 'Freestyle'),
+        (scene.node_tree.nodes['Composite'], 'Image'))
+
+
+def render(output_filename: str) -> None:
+    """render to an output file"""
+    print('rendering...', end='', flush=True)
+    bpy.ops.render.render()
+    bpy.data.images["Render Result"].save_render(filepath=output_filename)
+    print('done')
 
 
 def add_model(
