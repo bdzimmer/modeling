@@ -129,8 +129,8 @@ def main(args):
 
     # set background color
 
-    # background = scene.world.node_tree.nodes['Background']
-    # background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
+    background = scene.world.node_tree.nodes['Background']
+    background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
     scene.render.film_transparent = True
 
     scene.render.engine = 'CYCLES'
