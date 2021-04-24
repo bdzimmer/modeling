@@ -65,6 +65,7 @@ def main(args):
     # a couple of hard-coded things for now
     clip_scale = 4.0
     sun_energy = config.get('sun_energy', 25.0)
+    line_thickness = config.get('line_thickness', 1.0)
 
     # some hard-coded stuff for working with the first model
 
@@ -72,6 +73,7 @@ def main(args):
 
     scale = model_config.get('pos_scale', 1.5)
     center = model_config['center']
+    ortho_scale = model_config.get('ortho_scale', 1.1)
 
     pos = model_config['size'] * scale
     clip_end = model_config['size'] * clip_scale
@@ -153,12 +155,14 @@ def main(args):
 
             # TODO: disable rendering everything except freestyle
             scene.render.engine = 'BLENDER_EEVEE'
+            scene.render.resolution_x = 1080
+            scene.render.resolution_y = 1080
 
-            set_render_outlines(scene, line_thickness=1.0)
+            set_render_outlines(scene, line_thickness=line_thickness)
             cam.data.type = 'ORTHO'
             cam.data.clip_start = 0
             cam.data.clip_end = pos * 2.0
-            cam.data.ortho_scale = pos * 1.2
+            cam.data.ortho_scale = model_config['size'] * ortho_scale
 
             # root_obj.location = (0, 0, 0)
 
