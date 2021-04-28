@@ -6,9 +6,12 @@ Types for meshes and related data.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import numpy as np
+
+Point3 = Union[np.ndarray, Tuple[float, float, float]]
+Vec3 = Union[np.ndarray, Tuple[float, float, float]]
 
 Verts2D = np.ndarray
 Verts = np.ndarray

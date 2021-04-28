@@ -14,8 +14,7 @@ import numpy as np
 import pyrender
 
 from modeling import view
-from modeling.types import Mesh
-
+from modeling.types import Mesh, Vec3
 
 X_HAT = np.array([1.0, 0.0, 0.0])
 Y_HAT = np.array([0.0, 1.0, 0.0])
@@ -75,7 +74,7 @@ def rotation_z(angle):
 
 def translate(
         mesh: Mesh,
-        trans: Union[np.ndarray, Tuple[float, float, float]]) -> Mesh:
+        trans: Vec3) -> Mesh:
     """translate a mesh"""
     return mesh[0] + trans, mesh[1]
 
@@ -146,7 +145,7 @@ def shift(xyz: np.ndarray, trans: np.ndarray) -> np.ndarray:
 
 def elongate(
         pts: np.ndarray,
-        amount: Union[List, np.ndarray]) -> np.ndarray:
+        amount: Union[Tuple, np.ndarray]) -> np.ndarray:
     """add sign-aware offsets"""
     amount = np.expand_dims(amount, axis=0)
     return pts + np.sign(pts) * amount
