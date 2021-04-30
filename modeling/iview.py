@@ -8,6 +8,7 @@ Interactive viewer for procedural modeling.
 
 import os
 import pickle
+import sys
 import time
 
 import pyrender
@@ -25,11 +26,12 @@ MESH_MATERIAL = pyrender.material.MetallicRoughnessMaterial(
 BG_COLOR = (0, 0.5, 0.5)
 
 
-def get_mesh() -> pyrender.Mesh:
+def get_mesh(mesh_filename: str) -> pyrender.Mesh:
     """get a mesh to render"""
-    mesh = trimesh.load(MESH_FILENAME)
 
-    colors_filename = os.path.splitext(MESH_FILENAME)[0] + '_fc.pkl'
+    mesh = trimesh.load(mesh_filename)
+
+    colors_filename = os.path.splitext(mesh_filename)[0] + '_fc.pkl'
 
     if os.path.exists(colors_filename):
         with open(colors_filename, 'rb') as pickle_file:
@@ -39,11 +41,16 @@ def get_mesh() -> pyrender.Mesh:
     return pyrender.Mesh.from_trimesh(mesh, material=MESH_MATERIAL, smooth=False)
 
 
-def main():
+def main(argv):
     """main program"""
 
+    if len(argv) > 1:
+        mesh_filename = argv[1]
+    else:
+        mesh_filename = MESH_FILENAME
+
     scene = pyrender.Scene(bg_color=BG_COLOR)
-    mesh = get_mesh()
+    mesh = get_mesh(mesh_filename)
     mesh_node = scene.add(mesh)
 
     viewer = pyrender.Viewer(
@@ -65,7 +72,7 @@ def main():
         if mesh_node is not None:
             scene.remove_node(mesh_node)
 
-        mesh = get_mesh()
+        mesh = get_mesh(mesh_filename)
         mesh_node = scene.add(mesh)
 
         viewer.render_lock.release()
@@ -74,4 +81,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
