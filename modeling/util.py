@@ -105,17 +105,15 @@ def spin(mesh, n_dups, offset):
         for x in range(n_dups)]
 
 
-# TODO: rename to "attach ___"
-
-def add_z(xy: np.ndarray, z: float) -> np.ndarray:
+def attach_z(xy: np.ndarray, z: float) -> np.ndarray:
     """add a z dimension to a set of 2D points"""
     zs = np.ones(xy.shape[0]) * z
     zs = np.expand_dims(zs, axis=1)
     return np.concatenate([xy, zs], axis=1)
 
 
-def add_y(xz: np.ndarray, y: float) -> np.ndarray:
-    """add a z dimension to a set of 2D points"""
+def attach_y(xz: np.ndarray, y: float) -> np.ndarray:
+    """add a y dimension to a set of 2D points"""
     # TODO: generalize and refactor
 
     ys = np.ones(xz.shape[0]) * y

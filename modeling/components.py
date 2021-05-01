@@ -12,7 +12,7 @@ import numpy as np
 import trimesh
 
 from modeling import util
-from modeling.types import Verts2D, Verts, Faces, Mesh, MeshExtended
+from modeling.types import Point3, Verts2D, Verts, Faces, Mesh, MeshExtended
 
 
 def surface_revolution(
@@ -384,7 +384,7 @@ def link_loop(x: List[int], y: List[int]) -> Faces:
 def extend_to_cap(
         mesh: Mesh,
         vert_idxs_old: List[int],
-        vert_new: Tuple[float, float, float]) -> MeshExtended:
+        vert_new: Point3) -> MeshExtended:
     """extend a mesh, capping off an open loop"""
 
     return extend(
@@ -497,14 +497,15 @@ def solidify_loop_se(
 
     mesh = point_mesh(point_start)
 
-    mesh, ex_idxs, _ = extend_from_cap(mesh, 0, util.add_y(loop_xz, start_y), True)
-    mesh, ex_idxs, _ = extend_link_loop(mesh, ex_idxs, util.add_y(loop_xz, end_y))
+    mesh, ex_idxs, _ = extend_from_cap(mesh, 0, util.attach_y(loop_xz, start_y), True)
+    mesh, ex_idxs, _ = extend_link_loop(mesh, ex_idxs, util.attach_y(loop_xz, end_y))
     mesh, ex_idxs, _ = extend_to_cap(mesh, util.loop(ex_idxs), point_end)
 
     return mesh
 
 
-def point_mesh(point):
+def point_mesh(point: Point3) -> Mesh:
+    """create a mesh from a single point"""
     point = np.array(point)
     verts = np.array([point])
     faces = np.zeros((0, 3), dtype=np.int)
