@@ -14,6 +14,20 @@ import bpy.types as btypes
 
 DEBUG = True
 
+TRACK_NEGATIVE_Z = 'TRACK_NEGATIVE_Z'
+
+TRACK_AXIS = {
+    '-z': TRACK_NEGATIVE_Z
+}
+
+UP_X = 'UP_X'
+UP_Y = 'UP_Y'
+
+UP_AXIS = {
+    'x': UP_X,
+    'y': UP_Y
+}
+
 
 def find_args(argv: List[str]) -> List[str]:
     """find relevant args for script from complete command line args"""
@@ -60,6 +74,11 @@ def reset_scene():
 def quit():
     """quit blender"""
     bpy.ops.wm.quit_blender()
+
+
+def get_obj_by_name(name: str) -> bpy.types.Object:
+    """get an object by name"""
+    return bpy.context.scene.objects.get(name)
 
 
 def add_link(mat, conn_out, conn_in):
@@ -215,7 +234,7 @@ def point_at(
         track_axis: str,
         up_axis: str) -> None:
     """point one object at another using a constraint"""
-    track_to = src.constraints.new("TRACK_TO")
+    track_to = src.constraints.new('TRACK_TO')
     track_to.target = dst
     track_to.track_axis = track_axis
     track_to.up_axis = up_axis

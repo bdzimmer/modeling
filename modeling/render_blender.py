@@ -14,7 +14,6 @@ import math
 
 import bpy
 
-
 # TODO: there is probably a way to find this at runtime
 CODE_DIRNAME = '/home/ben/code/modeling'
 
@@ -29,6 +28,8 @@ DO_QUIT = True
 
 CYCLES_RENDER_SAMPLES = 8
 CYCLES_PREVIEW_SAMPLES = 8
+
+LIGHT_SUN = 'sun'
 
 
 def import_obj(filename) -> bpy.types.Object:
@@ -69,18 +70,18 @@ def main(args):
 
     # some hard-coded stuff for working with the first model
 
-    model_config = config['models'][0]
+    config_model = config['models'][0]
 
-    scale = model_config.get('pos_scale', 1.5)
-    center = model_config['center']
-    ortho_scale = model_config.get('ortho_scale', 1.1)
+    scale = config_model.get('pos_scale', 1.5)
+    center = config_model['center']
+    ortho_scale = config_model.get('ortho_scale', 1.1)
 
-    pos = model_config['size'] * scale
-    clip_end = model_config['size'] * clip_scale
+    pos = config_model['size'] * scale
+    clip_end = config_model['size'] * clip_scale
 
     root_obj_loc = (-center[0], -center[1], -center[2])
-    cam_pos = (pos * 0.75, pos * 1.5, pos * 0.5)
-    sun_pos = (pos, pos * 0.25, pos * 0.3)
+    # cam_pos = (pos * 0.75, pos * 1.5, pos * 0.5)
+    # sun_pos = (pos, pos * 0.25, pos * 0.3)
 
     # ~~~~ clear scene
 
@@ -95,7 +96,7 @@ def main(args):
     # TODO: do this with some kind of offset instead
     root_obj.location = root_obj_loc
 
-    # ~~~~ origin object
+    # ~~~~ special origin object
 
     origin_obj = bpy.data.objects.new('origin', None)
     bpy.context.scene.collection.objects.link(origin_obj)
@@ -103,34 +104,38 @@ def main(args):
 
     # ~~~~ camera
 
+    # for now assume one camera
+
     bpy.ops.object.camera_add()
     cam = bpy.context.object
     cam.name = "Camera"
-    cam.location = cam_pos
     cam.data.clip_end = clip_end
 
-    # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
-    blender.point_at(cam, origin_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    set_transformation(cam, config['camera']['transformation'])
 
     bpy.context.scene.camera = cam
 
-    # ~~~~ Light
+    # ~~~~ lights
 
-    sun = blender.sun(
-        name='Sun',
-        loc=sun_pos,
-        rot_euler=(0.0, 0.0, 0.0),
-        energy=sun_energy,
-        angle=0.0,  # 10.0 * math.pi / 180.0,
-    )
-    blender.point_at(sun, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    for light_name, light in config['lights'].items():
+        if light['type'] == LIGHT_SUN:
+            light_obj = blender.sun(
+                name=light_name,
+                loc=(0.0, 0.0, 0.0),
+                rot_euler=(0.0, 0.0, 0.0),
+                energy=light['energy'],
+                angle=light['angle']
+            )
+        else:
+            print(f'Invalid light type')
+
+        set_transformation(light_obj, light['transformation'])
 
     # ~~~~ render settings
 
     scene = bpy.context.scene
 
     # set background color
-
     background = scene.world.node_tree.nodes['Background']
     background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
     scene.render.film_transparent = True
@@ -162,23 +167,24 @@ def main(args):
             cam.data.type = 'ORTHO'
             cam.data.clip_start = 0
             cam.data.clip_end = pos * 2.0
-            cam.data.ortho_scale = model_config['size'] * ortho_scale
+            cam.data.ortho_scale = config_model['size'] * ortho_scale
 
             # root_obj.location = (0, 0, 0)
 
             for name, cam_pos, up_dir in [
-                    ('pos_x', (1, 0, 0), 'UP_Y'),
-                    ('pos_y', (0, 1, 0), 'UP_Y'),
-                    ('neg_y', (0, -1, 0), 'UP_Y'),
-                    ('pos_z', (0, 0, 1), 'UP_X'),
-                    ('neg_z', (0, 0, -1), 'UP_X')]:
+                    ('pos_x', (1, 0, 0), blender.UP_Y),
+                    ('pos_y', (0, 1, 0), blender.UP_Y),
+                    ('neg_y', (0, -1, 0), blender.UP_Y),
+                    ('pos_z', (0, 0, 1), blender.UP_X),
+                    ('neg_z', (0, 0, -1), blender.UP_X)]:
                 print(name)
                 cam_pos = (
                     cam_pos[0] * pos,
                     cam_pos[1] * pos,
                     cam_pos[2] * pos)
                 cam.location = cam_pos
-                blender.point_at(cam, origin_obj, 'TRACK_NEGATIVE_Z', up_dir)
+                blender.point_at(
+                    cam, origin_obj, blender.TRACK_NEGATIVE_Z, up_dir)
                 render(output_filename_prefix + '_outline_' + name + '.png')
 
     if DO_QUIT:
@@ -255,6 +261,31 @@ def add_model(
         add_model(child, obj)
 
     return obj
+
+
+def set_transformation(
+        obj: bpy.types.Object,
+        transf: Dict[str, str]) -> None:
+    """set the transformation of an object"""
+
+    trans = transf['translation']
+    rot = transf['rotation']
+
+    obj.location = trans
+    # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+
+    if isinstance(rot, dict):
+        point_at_obj = blender.get_obj_by_name(rot['point_at'])
+        blender.point_at(
+            obj,
+            point_at_obj,
+            blender.TRACK_AXIS[rot.get('track_axis', '-z')],
+            blender.UP_AXIS[rot.get('up_axis', 'y')])
+    else:
+        if len(rot) == 3:
+            obj.rot_euler = rot
+        else:
+            obj.rot_quaternion = rot
 
 
 main(blender.find_args(sys.argv))
