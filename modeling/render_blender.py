@@ -61,20 +61,22 @@ def main(args):
     with open(input_filename, 'r') as json_file:
         config = json.load(json_file)
 
-    do_outline = config.get('do_outline', False)
+    # some render_blender specific settings
+
+    do_render = config['render_blender'].get('do_render', True)
+    do_outline = config['render_blender'].get('do_outline', False)
+    do_quit = config['render_blender'].get('do_quit', True)
+    ortho_scale = config['render_blender'].get('ortho_scale', 1.1)
+    line_thickness = config['render_blender'].get('line_thickness', 1.0)
 
     # a couple of hard-coded things for now
     clip_scale = 4.0
-    sun_energy = config.get('sun_energy', 25.0)
-    line_thickness = config.get('line_thickness', 1.0)
 
     # some hard-coded stuff for working with the first model
-
     config_model = config['models'][0]
 
     scale = config_model.get('pos_scale', 1.5)
     center = config_model['center']
-    ortho_scale = config_model.get('ortho_scale', 1.1)
 
     pos = config_model['size'] * scale
     clip_end = config_model['size'] * clip_scale
@@ -150,7 +152,7 @@ def main(args):
     # bpy.context.scene.cycles.use_denoising = True
     scene.view_settings.look = 'Medium High Contrast'
 
-    if DO_RENDER:
+    if do_render:
 
         # standard render
         render(output_filename)
@@ -187,7 +189,7 @@ def main(args):
                     cam, origin_obj, blender.TRACK_NEGATIVE_Z, up_dir)
                 render(output_filename_prefix + '_outline_' + name + '.png')
 
-    if DO_QUIT:
+    if do_quit:
         blender.quit()
 
 
