@@ -5,8 +5,8 @@ Use Blender to render a model to a PNG.
 """
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
-import os
 
+import os
 import json
 import sys
 from typing import Any, Dict, Optional
@@ -25,6 +25,8 @@ from modeling import blender
 DO_RENDER = True
 DO_QUIT = True
 
+# TODO: figure out how to control this name
+DEFAULT_COLLECTION = 'Collection'
 
 CYCLES_RENDER_SAMPLES = 8
 CYCLES_PREVIEW_SAMPLES = 8
@@ -223,9 +225,15 @@ def add_model(
 
     # Note that some logic in here for material assumes that model names are unique.
 
-    obj = import_obj(model_config['filename'])
     name = model_config['name']
-    obj.name = name
+
+    model_filename = model_config.get('filename')
+    if model_filename is not None:
+        obj = import_obj(model_config['filename'])
+        obj.name = name
+    else:
+        obj = bpy.data.objects.new(name, None)
+        bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
 
     if parent is not None:
         obj.parent = parent
@@ -233,8 +241,7 @@ def add_model(
 
     transformation = model_config.get('transformation')
     if transformation is not None:
-        # for now just translation. rotation later
-        obj.location = transformation['translation']
+        set_transformation(obj, transformation)
 
     # enable smooth shading
     auto_smooth_angle = model_config.get('auto_smooth_angle')
@@ -243,20 +250,23 @@ def add_model(
         obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
         bpy.ops.object.shade_smooth()
 
-    color = model_config.get('color')
+    if obj.data is not None:
 
-    # create a new material for the object
-    # not sure this is correct
-    # material = bpy.data.materials['Default OBJ']
-    material = bpy.data.materials.new(name=name)
-    material.use_nodes = True
-    if obj.data.materials:
-        obj.data.materials[0] = material
-    else:
-        obj.data.materials.append(material)
+        color = model_config.get('color')
 
-    if color is not None:
-        material.node_tree.nodes['Principled BSDF'].inputs[0].default_value = color
+        # create a new material for the object
+        # not sure this is correct
+        # material = bpy.data.materials['Default OBJ']
+        material = bpy.data.materials.new(name=name)
+        material.use_nodes = True
+
+        if obj.data.materials:
+            obj.data.materials[0] = material
+        else:
+            obj.data.materials.append(material)
+
+        if color is not None:
+            material.node_tree.nodes['Principled BSDF'].inputs[0].default_value = color
 
     children = model_config.get('children', [])
     for child in children:
@@ -285,9 +295,14 @@ def set_transformation(
             blender.UP_AXIS[rot.get('up_axis', 'y')])
     else:
         if len(rot) == 3:
-            obj.rot_euler = rot
+            # TODO: figure out of these are intrinsic or extrinsic
+            # I think Panda3D's HPR is intrinsic
+            # If Blender is extrinsic, the order can just be reversed, LOL
+            obj.rotation_mode = 'ZXY'
+            obj.rotation_euler = rot
         else:
-            obj.rot_quaternion = rot
+            obj.rotation_mode = 'QUATERNION'
+            obj.rotation_quaternion = rot
 
 
 main(blender.find_args(sys.argv))
