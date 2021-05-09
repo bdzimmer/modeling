@@ -299,7 +299,11 @@ def set_transformation(
             # I think Panda3D's HPR is intrinsic
             # If Blender is extrinsic, the order can just be reversed, LOL
             obj.rotation_mode = 'ZXY'
-            obj.rotation_euler = rot
+            obj.rotation_euler = (
+                math.radians(rot[1]),
+                math.radians(rot[2]),
+                math.radians(rot[0]),
+            )
         else:
             obj.rotation_mode = 'QUATERNION'
             obj.rotation_quaternion = rot
