@@ -63,29 +63,28 @@ def main(args):
     with open(input_filename, 'r') as json_file:
         config = json.load(json_file)
 
+        # a couple of hard-coded things for now
+        clip_scale = 4.0
+
     # some render_blender specific settings
 
-    do_render = config['render_blender'].get('do_render', True)
-    do_outline = config['render_blender'].get('do_outline', False)
-    do_quit = config['render_blender'].get('do_quit', True)
-    ortho_scale = config['render_blender'].get('ortho_scale', 1.1)
-    line_thickness = config['render_blender'].get('line_thickness', 1.0)
+    config_render = config['render_blender']
 
-    # a couple of hard-coded things for now
-    clip_scale = 4.0
+    do_render = config_render.get('do_render', True)
+    do_outline = config_render.get('do_outline', False)
+    do_quit = config_render.get('do_quit', True)
+    ortho_scale = config_render.get('ortho_scale', 1.1)
+    line_thickness = config_render.get('line_thickness', 1.0)
+
+    scale = config_render.get('pos_scale', 1.5)
+    center = config_render['center']
+    pos = config_render['size'] * scale
+    clip_end = config_render['size'] * clip_scale
 
     # some hard-coded stuff for working with the first model
     config_model = config['models'][0]
 
-    scale = config_model.get('pos_scale', 1.5)
-    center = config_model['center']
-
-    pos = config_model['size'] * scale
-    clip_end = config_model['size'] * clip_scale
-
     root_obj_loc = (-center[0], -center[1], -center[2])
-    # cam_pos = (pos * 0.75, pos * 1.5, pos * 0.5)
-    # sun_pos = (pos, pos * 0.25, pos * 0.3)
 
     # ~~~~ clear scene
 
@@ -171,7 +170,7 @@ def main(args):
             cam.data.type = 'ORTHO'
             cam.data.clip_start = 0
             cam.data.clip_end = pos * 2.0
-            cam.data.ortho_scale = config_model['size'] * ortho_scale
+            cam.data.ortho_scale = config_render['size'] * ortho_scale
 
             # root_obj.location = (0, 0, 0)
 
@@ -243,6 +242,7 @@ def add_model(
     if transformation is not None:
         set_transformation(obj, transformation)
 
+    # TODO: do this in add_model
     # enable smooth shading
     auto_smooth_angle = model_config.get('auto_smooth_angle')
     if auto_smooth_angle is not None:
@@ -298,11 +298,15 @@ def set_transformation(
             # TODO: figure out of these are intrinsic or extrinsic
             # I think Panda3D's HPR is intrinsic
             # If Blender is extrinsic, the order can just be reversed, LOL
+            # rot is in HPR form
+            # H -> Z
+            # P -> X
+            # R -> Y
             obj.rotation_mode = 'ZXY'
             obj.rotation_euler = (
-                math.radians(rot[1]),
-                math.radians(rot[2]),
-                math.radians(rot[0]),
+                math.radians(rot[1]),  # X == (ZXY)[1]
+                math.radians(rot[2]),  # Y == (ZXY)[2]
+                math.radians(rot[0]),  # Z == (ZXY)[0]
             )
         else:
             obj.rotation_mode = 'QUATERNION'

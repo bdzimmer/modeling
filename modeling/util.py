@@ -14,7 +14,7 @@ import numpy as np
 import pyrender
 
 from modeling import view
-from modeling.types import Mesh, Vec3
+from modeling.types import Mesh, Vec3, Verts
 
 X_HAT = np.array([1.0, 0.0, 0.0])
 Y_HAT = np.array([0.0, 1.0, 0.0])
@@ -77,6 +77,11 @@ def translate(
         trans: Vec3) -> Mesh:
     """translate a mesh"""
     return mesh[0] + trans, mesh[1]
+
+
+def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
+    """rotate verts"""
+    return np.transpose(np.dot(rot_mat, np.transpose(verts)))
 
 
 def transform(mesh: Mesh, mat: np.ndarray) -> Mesh:
