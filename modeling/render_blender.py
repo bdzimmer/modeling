@@ -14,7 +14,7 @@ import math
 
 import bpy
 
-# TODO: there is probably a way to find this at runtime
+# TODO: there is probably a way to find the script directory at runtime
 CODE_DIRNAME = '/home/ben/code/modeling'
 
 if CODE_DIRNAME not in sys.path:
@@ -25,7 +25,7 @@ from modeling import blender
 DO_RENDER = True
 DO_QUIT = True
 
-# TODO: figure out how to control this name
+# TODO: figure out how to control the name of the default collection
 DEFAULT_COLLECTION = 'Collection'
 
 CYCLES_RENDER_SAMPLES = 8
@@ -81,9 +81,6 @@ def main(args):
     pos = config_render['size'] * scale
     clip_end = config_render['size'] * clip_scale
 
-    # some hard-coded stuff for working with the first model
-    config_model = config['models'][0]
-
     root_obj_loc = (-center[0], -center[1], -center[2])
 
     # ~~~~ clear scene
@@ -96,7 +93,7 @@ def main(args):
     # for now, just load starting from the first model
     root_obj = add_model(config['models'][0], None)
 
-    # TODO: do this with some kind of offset instead
+    # apply offset from center in configuration
     root_obj.location = root_obj_loc
 
     # ~~~~ special origin object
@@ -159,9 +156,9 @@ def main(args):
         render(output_filename)
 
         if do_outline:
-            # WIP: outline mode for schematics
+            # outline mode for schematics
+            # TODO: is there a way disable rendering everything except freestyle?
 
-            # TODO: disable rendering everything except freestyle
             scene.render.engine = 'BLENDER_EEVEE'
             scene.render.resolution_x = 1080
             scene.render.resolution_y = 1080
@@ -196,11 +193,10 @@ def main(args):
 
 def set_render_outlines(scene: bpy.types.Scene, line_thickness: float) -> None:
     """set up a scene for rendering outlines using freestyle"""
+
     scene.use_nodes = True
     scene.render.use_freestyle = True
     scene.render.line_thickness = line_thickness
-
-    # TODO: other relevant freestyle settings
     scene.view_layers['View Layer'].freestyle_settings.as_render_pass = True
 
     blender.add_link(
@@ -236,13 +232,12 @@ def add_model(
 
     if parent is not None:
         obj.parent = parent
-        # TODO: is there another step required to make transforms relative???
 
     transformation = model_config.get('transformation')
     if transformation is not None:
         set_transformation(obj, transformation)
 
-    # TODO: do this in add_model
+    # TODO: do smooth shading per model in add_model
     # enable smooth shading
     auto_smooth_angle = model_config.get('auto_smooth_angle')
     if auto_smooth_angle is not None:
@@ -295,7 +290,6 @@ def set_transformation(
             blender.UP_AXIS[rot.get('up_axis', 'y')])
     else:
         if len(rot) == 3:
-            # TODO: figure out of these are intrinsic or extrinsic
             # I think Panda3D's HPR is intrinsic
             # If Blender is extrinsic, the order can just be reversed, LOL
             # rot is in HPR form

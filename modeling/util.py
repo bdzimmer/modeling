@@ -34,7 +34,7 @@ def tm(verts, faces):  # pylint: disable=invalid-name
 
 def concat(meshes: List[Mesh]) -> Mesh:
     """concatenate meshes"""
-    # TODO: do this myself without the conversion to trimesh and back
+    # TODO: do concat myself without the conversion to trimesh and back
     tm_mesh = concat_tm([trimesh.Trimesh(vertices=x[0], faces=x[1], process=False) for x in meshes])
     # TODO: add assertion that the total counts of vertices and faces are correct
     return tm_mesh.vertices, tm_mesh.faces

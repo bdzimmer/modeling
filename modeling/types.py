@@ -19,9 +19,6 @@ Faces = np.ndarray
 
 FaceColors = np.ndarray  # (n x 3) or (n x 4)
 
-
-# TODO: types for vert and face indices
-
 # mesh consists of faces and vertices
 Mesh = Tuple[Verts, Faces]
 
