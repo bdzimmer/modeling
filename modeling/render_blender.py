@@ -1,6 +1,6 @@
 """
 
-Use Blender to render a model to a PNG.
+Use Blender to render a scene to one or more image files.
 
 """
 
@@ -23,7 +23,6 @@ if CODE_DIRNAME not in sys.path:
 from modeling import blender
 
 DO_RENDER = True
-DO_QUIT = True
 
 # TODO: figure out how to control the name of the default collection
 DEFAULT_COLLECTION = 'Collection'
@@ -63,8 +62,8 @@ def main(args):
     with open(input_filename, 'r') as json_file:
         config = json.load(json_file)
 
-        # a couple of hard-coded things for now
-        clip_scale = 4.0
+    # a couple of hard-coded things for now
+    clip_scale = 4.0
 
     # some render_blender specific settings
 
