@@ -62,6 +62,7 @@ def main(args):
             use_selection=True,
             use_normals=False,
             use_triangles=True,
+            use_edges=False,
             use_uvs=False,
             axis_forward='Y',
             axis_up='Z')

@@ -6,6 +6,8 @@ Write meshes to Panda3D egg format.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
+from typing import Optional
+
 import numpy as np
 
 from panda3d import core
@@ -23,7 +25,7 @@ def write(
 def mesh_to_egg(
         verts: np.ndarray,
         faces: np.ndarray,
-        face_colors: np.ndarray,
+        face_colors: Optional[np.ndarray],
         vertex_pool_name: str) -> egg.EggData:
     """convert a mesh to egg data"""
 
