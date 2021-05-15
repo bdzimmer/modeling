@@ -236,7 +236,6 @@ def add_model(
     if transformation is not None:
         set_transformation(obj, transformation)
 
-    # TODO: do smooth shading per model in add_model
     # enable smooth shading
     auto_smooth_angle = model_config.get('auto_smooth_angle')
     if auto_smooth_angle is not None:
