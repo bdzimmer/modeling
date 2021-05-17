@@ -110,6 +110,12 @@ def spin(mesh, n_dups, offset):
         for x in range(n_dups)]
 
 
+def spin_frac(mesh, n_dups, offset, frac):
+    return [
+        transform(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
+        for x in range(n_dups)]
+
+
 def attach_z(xy: np.ndarray, z: float) -> np.ndarray:
     """add a z dimension to a set of 2D points"""
     zs = np.ones(xy.shape[0]) * z
