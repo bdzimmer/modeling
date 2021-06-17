@@ -15,6 +15,9 @@ def view(mesh, material):
     scene = pyrender.Scene()
     if isinstance(mesh, tuple):
         mesh = trimesh.Trimesh(*mesh)
+
+    print(f'vertices: {mesh.vertices.shape[0]} faces: {mesh.faces.shape[0]}')
+
     scene.add(pyrender.Mesh.from_trimesh(mesh, material=material, smooth=False))
     pyrender.Viewer(
         scene,

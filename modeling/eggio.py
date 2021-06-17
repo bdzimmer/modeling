@@ -25,6 +25,7 @@ def write(
 def mesh_to_egg(
         verts: np.ndarray,
         faces: np.ndarray,
+        vertex_colors: Optional[np.ndarray],
         face_colors: Optional[np.ndarray],
         vertex_pool_name: str) -> egg.EggData:
     """convert a mesh to egg data"""
@@ -39,9 +40,14 @@ def mesh_to_egg(
     vp = egg.EggVertexPool(vertex_pool_name)
     data.addChild(vp)
 
-    for vert_np in verts:
+    for idx, vert_np in enumerate(verts):
         vert_egg = egg.EggVertex()
         vert_egg.setPos(core.Point3D(*vert_np))
+
+        if vertex_colors is not None:
+            color = core.Vec4(*vertex_colors[idx])
+            vert_egg.setColor(color)
+
         vp.addVertex(vert_egg)
 
     # TODO: optionally put polygons in multiple EggGroups

@@ -252,6 +252,11 @@ def view_mesh(mesh: Any) -> None:
         metallicFactor=0.25,
         roughnessFactor=0.5)
 
+    print('interactive viewer')
+    print('\ti - cycle axis options')
+    print('\tw - wireframe')
+    print('\tq - quit')
+
     view.view(mesh, material)
 
 
