@@ -5,6 +5,7 @@ Use Blender to render a scene to one or more image files.
 """
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
+import pickle
 
 import os
 import json
@@ -52,10 +53,17 @@ def main(args):
 
     input_filename = args[0]
     output_filename = args[1]
+
+    if len(args) > 2:
+        animation_filename = args[2]
+    else:
+        animation_filename = None
+
     output_filename_prefix = os.path.splitext(output_filename)[0]
 
     print('input filename: ', input_filename)
     print('output filename:', output_filename)
+    print('animation filename:', animation_filename)
 
     # ~~~~ load input json
 
@@ -87,10 +95,13 @@ def main(args):
     blender.delete_all_objects()
     blender.reset_scene()
 
-    # ~~~~ load OBJ file
+    # ~~~~ load OBJ files
 
     # for now, just load starting from the first model
     root_obj = add_model(config['models'][0], None)
+    if len(config['models']) > 1:
+        for model in config['models'][1:]:
+            add_model(model, None)
 
     # apply offset from center in configuration
     root_obj.location = root_obj_loc
@@ -137,6 +148,8 @@ def main(args):
     # set background color
     background = scene.world.node_tree.nodes['Background']
     background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
+
+    # TODO: make this an option
     scene.render.film_transparent = True
 
     scene.render.engine = 'CYCLES'
@@ -148,6 +161,43 @@ def main(args):
     # bpy.context.scene.render.filepath = working_dirname + '/'
     # bpy.context.scene.cycles.use_denoising = True
     scene.view_settings.look = 'Medium High Contrast'
+
+    # ~~~~ animations
+
+    if animation_filename is not None:
+
+        states = []
+        with open(animation_filename, 'rb') as animation_file:
+            while True:
+                try:
+                    states.append(pickle.load(animation_file))
+                except EOFError:
+                    break
+
+        scene = bpy.context.scene
+        scene.frame_start = 0
+        scene.frame_end = len(states)
+
+        for config_model in config['models']:
+            obj = blender.get_obj_by_name(config_model['name'])
+            obj.rotation_mode = 'QUATERNION'
+
+        for frame, state in enumerate(states):
+            print(frame, state)
+            for name, entity in state['entities'].items():
+                obj = blender.get_obj_by_name(name)
+
+                obj.keyframe_insert('location', frame=frame)
+                obj.location = tuple(entity['transformation']['translation'])
+
+                obj.keyframe_insert('rotation_quaternion', frame=frame)
+                obj.rotation_quaternion = tuple(entity['transformation']['rotation'])
+
+        for config_model in config['models']:
+            obj = blender.get_obj_by_name(config_model['name'])
+            for fcurve in obj.animation_data.action.fcurves:
+                for keyframe in fcurve.keyframe_points:
+                    keyframe.interpolation = 'CONSTANT'
 
     if do_render:
 
