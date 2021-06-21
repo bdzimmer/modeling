@@ -82,6 +82,7 @@ def main(args):
     do_quit = config_render.get('do_quit', True)
     ortho_scale = config_render.get('ortho_scale', 1.1)
     line_thickness = config_render.get('line_thickness', 1.0)
+    film_transparent = config_render.get('film_transparent', True)
 
     scale = config_render.get('pos_scale', 1.5)
     center = config_render['center']
@@ -149,8 +150,7 @@ def main(args):
     background = scene.world.node_tree.nodes['Background']
     background.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
 
-    # TODO: make this an option
-    scene.render.film_transparent = True
+    scene.render.film_transparent = film_transparent
 
     scene.render.engine = 'CYCLES'
     blender.configure_cycles(
