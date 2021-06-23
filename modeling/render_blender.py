@@ -182,16 +182,23 @@ def main(args):
             obj = blender.get_obj_by_name(config_model['name'])
             obj.rotation_mode = 'QUATERNION'
 
+        # TODO: need to do this for children too
+        # (shortcut below)
+
         for frame, state in enumerate(states):
             print(frame, state)
-            for name, entity in state['entities'].items():
+            for name, entity in state['objects'].items():
+                print('\t' + name)
                 obj = blender.get_obj_by_name(name)
+                obj.rotation_mode = 'QUATERNION'
 
-                obj.keyframe_insert('location', frame=frame)
-                obj.location = tuple(entity['transformation']['translation'])
+                if entity['transformation'].get('translation') is not None:
+                    obj.keyframe_insert('location', frame=frame)
+                    obj.location = tuple(entity['transformation']['translation'])
 
-                obj.keyframe_insert('rotation_quaternion', frame=frame)
-                obj.rotation_quaternion = tuple(entity['transformation']['rotation'])
+                if entity['transformation'].get('rotation') is not None:
+                    obj.keyframe_insert('rotation_quaternion', frame=frame)
+                    obj.rotation_quaternion = tuple(entity['transformation']['rotation'])
 
         for config_model in config['models']:
             obj = blender.get_obj_by_name(config_model['name'])
