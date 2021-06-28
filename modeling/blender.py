@@ -71,6 +71,18 @@ def reset_scene():
     bpy.context.scene.cursor.rotation_quaternion = (1, 0, 0, 0)
 
 
+def select_none() -> None:
+    """unselect all objects"""
+    for obj in bpy.data.objects:
+        obj.select_set(False)
+
+
+def select(obj: btypes.Object) -> None:
+    """select an object by reference"""
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+
+
 def quit():
     """quit blender"""
     bpy.ops.wm.quit_blender()
@@ -128,7 +140,7 @@ def arrange_nodes_hierarchy(columns: List[Any], x_pos: float, y_pos: float) -> N
     """a little bit more powerful version"""
     print("arranging at offset", x_pos, y_pos)
 
-    bpy.ops.wm.redraw_timer(type="DRAW_WIN_SWAP", iterations=1)
+    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
 
     x_gap = 64
     y_gap = 16
