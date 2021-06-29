@@ -83,6 +83,18 @@ def select(obj: btypes.Object) -> None:
     bpy.context.view_layer.objects.active = obj
 
 
+def hide(obj: btypes.Object) -> None:
+    """hide an object from render"""
+    # obj.hide_viewport = True
+    obj.hide_render = True
+
+
+def show(obj: btypes.Object) -> None:
+    """show an object for render"""
+    # obj.hide_viewport = False
+    obj.hide_render = False
+
+
 def quit():
     """quit blender"""
     bpy.ops.wm.quit_blender()
