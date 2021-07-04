@@ -6,7 +6,7 @@ Common functions for nicer dealings with mesh objects.
 
 # Copyright (c) 2019 Ben Zimmer. All rights reserved.
 
-from typing import Any, Union, Tuple, List
+from typing import Any, Union, Tuple, List, Callable
 
 import trimesh
 from trimesh import transformations
@@ -134,6 +134,8 @@ def attach_y(xz: np.ndarray, y: float) -> np.ndarray:
 
 
 # ~~~~ operations on vertices
+
+# TODO: update signatures
 
 def scale_xz(xyz: np.ndarray, scale: float) -> np.ndarray:
     """scale the xz dimensions of 3D points"""
@@ -266,3 +268,22 @@ def mirror_x(mesh: Mesh) -> Mesh:
         mesh[0] * np.array([X_HAT_NEG]),
         mesh[1][:, [2, 1, 0]]
     )
+
+
+def adjust_verts(verts: Verts, select: Callable, modify: Callable) -> Verts:
+    """adjust verts by selecting and modifying vertices"""
+    verts = np.array(verts)
+    vert_idxs = select(verts)
+    verts_selected = verts[vert_idxs, :]
+    verts_selected_modified = modify(verts_selected)
+    verts[vert_idxs, :] = verts_selected_modified
+    return verts
+
+
+def adjust_mesh(mesh: Mesh, select: Callable, modify: Callable) -> Mesh:
+    """for convenience"""
+    verts, faces = mesh
+    verts = adjust_verts(verts, select, modify)
+    return verts, faces
+
+

@@ -12,7 +12,7 @@ import numpy as np
 import trimesh
 
 from modeling import util
-from modeling.types import Point3, Verts2D, Verts, Faces, Mesh, MeshExtended
+from modeling.types import Point3, Vec3, Verts2D, Verts, Faces, Mesh, MeshExtended
 
 
 def surface_revolution(
@@ -70,7 +70,7 @@ def surface_revolution(
 
 
 def close_face(idxs_points: List[int], idx_center: int) -> Faces:
-    """generate triangles to link an ordered set of points to a center poitn"""
+    """generate triangles to link an ordered set of points to a center point"""
 
     # TODO: rewrite as "close_face_loop"
 
@@ -85,7 +85,7 @@ def close_face(idxs_points: List[int], idx_center: int) -> Faces:
 
 
 def close_face_noloop(idxs_points: List[int], idx_center: int) -> Faces:
-    """generate triangles to link an ordered set of points to a center poitn"""
+    """generate triangles to link an ordered set of points to a center point"""
 
     idxs_vert = list(idxs_points)
 
@@ -98,9 +98,31 @@ def close_face_noloop(idxs_points: List[int], idx_center: int) -> Faces:
 
 def verts_quad(idxs: Union[List[int], np.ndarray]) -> Faces:
     """make a quad (two triangles) from indices"""
+
     return np.vstack((
         idxs[0:3],
         (idxs[2], idxs[3], idxs[0])))
+
+
+def tri_normal(verts: Union[List[Point3], Verts]) -> Vec3:
+    """find the surface normal of a triangle"""
+    seg_0 = verts[1] - verts[0]
+    seg_1 = verts[2] - verts[0]
+    res = np.cross(seg_0, seg_1)
+    return res / np.linalg.norm(res)
+
+
+def is_triangle_pair_convex(
+        a: Point3,
+        b: Point3,
+        c: Point3,
+        d: Point3) -> bool:
+    """test whether a pair of triangles (abc, adb) are convex or concave."""
+    norm_0 = tri_normal([a, b, c])
+    norm_1 = tri_normal([a, d, b])
+    rot = np.cross(norm_0, norm_1)
+    shared_edge = b - a
+    return np.dot(rot, shared_edge) > 0
 
 
 def quad_verts(quad_idxs: Faces) -> List[int]:
@@ -305,6 +327,11 @@ def link(idxs_0: List[int], idxs_1: List[int]) -> Faces:
     idxs = list(range(len(idxs_0)))
     faces_list = []
     for idx_a, idx_b in zip(idxs[:-1], idxs[1:]):
+
+        # for now we want to assume that the new faces we are making are convex
+        # so adding some extra logic
+        # we could always make a version that doesn't do this
+
         faces_list.append(
             verts_quad([idxs_0[idx_a], idxs_0[idx_b], idxs_1[idx_b], idxs_1[idx_a]]))
 
@@ -327,6 +354,7 @@ def link_map(idxs_0: List[int], idxs_1: List[int], mapping: List[Tuple]) -> Face
             v_i_b, v_i_a = idxs_0, idxs_1
 
         # TODO: the case where we have two single indices later
+        # TODO: this might be backward
 
         # create a triangle for every pair of indices in many
         for idx_a, idx_b in zip(many[:-1], many[1:]):
@@ -506,7 +534,7 @@ def solidify_loop_se(
 
 def point_mesh(point: Point3) -> Mesh:
     """create a mesh from a single point"""
-    point = np.array(point)
+    point = np.array(point, dtype=np.float)
     verts = np.array([point])
     faces = np.zeros((0, 3), dtype=np.int)
     mesh = (verts, faces)
