@@ -63,8 +63,6 @@ def add_model(
 
     if obj.data is not None:
 
-        color = model_config.get('color')
-
         # create a new material for the object
         # not sure this is correct
         # material = bpy.data.materials['Default OBJ']
@@ -76,8 +74,17 @@ def add_model(
         else:
             obj.data.materials.append(material)
 
+        bsdf = material.node_tree.nodes['Principled BSDF']
+
+        color = model_config.get('color')
         if color is not None:
-            material.node_tree.nodes['Principled BSDF'].inputs[0].default_value = color
+            bsdf.inputs[0].default_value = color
+
+        mat = model_config.get('material')
+        if mat is not None:
+            emission = mat.get('emission')
+            if emission is not None:
+                bsdf.inputs['Emission'].default_value = emission
 
     children = model_config.get('children', [])
     for child in children:
