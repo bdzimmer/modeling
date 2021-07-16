@@ -112,6 +112,13 @@ def tri_normal(verts: Union[List[Point3], Verts]) -> Vec3:
     return res / np.linalg.norm(res)
 
 
+def tri_area(verts: Union[List[Point3], Verts]) -> Vec3:
+    """find the area of a triangle"""
+    seg_0 = verts[1] - verts[0]
+    seg_1 = verts[2] - verts[0]
+    return 0.5 * np.linalg.norm(np.cross(seg_0, seg_1))
+
+
 def is_triangle_pair_convex(
         a: Point3,
         b: Point3,
