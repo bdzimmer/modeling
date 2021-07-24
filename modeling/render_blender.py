@@ -160,6 +160,7 @@ def main(args):
                     break
 
         scene = bpy.context.scene
+        scene.render.fps = 60
         scene.frame_start = 0
         scene.frame_end = len(states)
 
@@ -172,18 +173,22 @@ def main(args):
 
         for frame, state in enumerate(states):
             print(frame, state)
+            scene.frame_set(frame)
+
             for name, entity in state['objects'].items():
                 print('\t' + name)
                 obj = blender.get_obj_by_name(name)
                 obj.rotation_mode = 'QUATERNION'
 
                 if entity['transformation'].get('translation') is not None:
-                    obj.keyframe_insert('location', frame=frame)
                     obj.location = tuple(entity['transformation']['translation'])
+                    obj.keyframe_insert('location')
 
                 if entity['transformation'].get('rotation') is not None:
-                    obj.keyframe_insert('rotation_quaternion', frame=frame)
                     obj.rotation_quaternion = tuple(entity['transformation']['rotation'])
+                    obj.keyframe_insert('rotation_quaternion')
+
+        scene.frame_set(0)
 
         for config_model in config['models']:
             obj = blender.get_obj_by_name(config_model['name'])
