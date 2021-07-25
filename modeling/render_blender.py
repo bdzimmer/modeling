@@ -122,6 +122,9 @@ def main(args):
                 energy=light['energy'],
                 angle=light['angle']
             )
+            shadow_cascade_max_distance = light.get('shadow_cascade_max_distance')
+            if shadow_cascade_max_distance is not None:
+                light_obj.data.shadow_cascade_max_distance = shadow_cascade_max_distance
         else:
             print(f'Invalid light type')
 
