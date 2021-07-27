@@ -14,8 +14,13 @@ Utilties for working with my own scene JSON format.
 # * auto_smooth_angle - if present, enable auto smoothing at the specified angle
 # * transformation - object with 'rotation' and 'translation' fields. Defaults
 #     to identity transformation if not present.
+# * props - optional properties such as modifiers
+#     * blender:wireframe - wireframe modifier
 # * children - a list of additional model objects that should be positioned
 #     relative to this one
+
+
+# TODO: make all these field names constants, for goodness sakes
 
 
 from typing import Any, Dict, Optional
@@ -85,6 +90,22 @@ def add_model(
             emission = mat.get('emission')
             if emission is not None:
                 bsdf.inputs['Emission'].default_value = emission
+
+        # additional properties
+        props = model_config.get('props')
+
+        if props is not None:
+
+            wireframe = props.get('blender:wireframe')
+            if wireframe is not None:
+                # required to add modifiers
+                bpy.context.view_layer.objects.active = obj
+                bpy.ops.object.modifier_add(type='WIREFRAME')
+                obj.modifiers['Wireframe'].thickness = wireframe.get('thickness', 0.02)
+                # TODO: make this optional
+                bpy.ops.object.editmode_toggle()
+                bpy.ops.mesh.tris_convert_to_quads()
+                bpy.ops.object.editmode_toggle()
 
     children = model_config.get('children', [])
     for child in children:
