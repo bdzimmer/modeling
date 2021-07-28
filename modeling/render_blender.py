@@ -171,9 +171,6 @@ def main(args):
             obj = blender.get_obj_by_name(config_model['name'])
             obj.rotation_mode = 'QUATERNION'
 
-        # TODO: need to do this for children too
-        # (shortcut below)
-
         for frame, state in enumerate(states):
             print(frame, state)
             scene.frame_set(frame)
