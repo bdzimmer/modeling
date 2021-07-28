@@ -102,6 +102,7 @@ def add_model(
                 bpy.context.view_layer.objects.active = obj
                 bpy.ops.object.modifier_add(type='WIREFRAME')
                 obj.modifiers['Wireframe'].thickness = wireframe.get('thickness', 0.02)
+                obj.modifiers['Wireframe'].use_even_offset = wireframe.get('use_even_offset', True)
                 # TODO: make this optional
                 bpy.ops.object.editmode_toggle()
                 bpy.ops.mesh.tris_convert_to_quads()
