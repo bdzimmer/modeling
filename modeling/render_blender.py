@@ -165,7 +165,7 @@ def main(args):
         scene = bpy.context.scene
         scene.render.fps = 60
         scene.frame_start = 0
-        scene.frame_end = len(states)
+        scene.frame_end = len(states) - 1
 
         for config_model in config['models']:
             obj = blender.get_obj_by_name(config_model['name'])
