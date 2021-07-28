@@ -48,7 +48,7 @@ def main(args):
 
     print('input filename: ', input_filename)
     print('output filename:', output_filename)
-    print('animation filename:', animation_filename)
+    print('animation input filename:', animation_filename)
 
     # ~~~~ load input json
 
@@ -63,8 +63,14 @@ def main(args):
     config_render = config['render_blender']
 
     do_render = config_render.get('do_render', True)
+    do_render_animation = config_render.get('do_render_animation', False)
     do_outline = config_render.get('do_outline', False)
     do_quit = config_render.get('do_quit', True)
+
+    render_resolution = config_render.get('render_resolution', [1920, 1080])
+    animation_use_eevee = config_render.get('animation_use_eevee', False)
+    render_eevee_use_bloom = config_render.get('render_eevee_use_bloom', False)
+
     ortho_scale = config_render.get('ortho_scale', 1.1)
     line_thickness = config_render.get('line_thickness', 1.0)
     film_transparent = config_render.get('film_transparent', True)
@@ -145,6 +151,10 @@ def main(args):
         scene,
         samples=CYCLES_RENDER_SAMPLES,
         preview_samples=CYCLES_PREVIEW_SAMPLES)
+    scene.eevee.use_bloom = render_eevee_use_bloom
+
+    scene.render.resolution_x = render_resolution[0]
+    scene.render.resolution_y = render_resolution[1]
 
     # bpy.context.scene.render.filepath = working_dirname + '/'
     # bpy.context.scene.cycles.use_denoising = True
@@ -195,6 +205,15 @@ def main(args):
             for fcurve in obj.animation_data.action.fcurves:
                 for keyframe in fcurve.keyframe_points:
                     keyframe.interpolation = 'CONSTANT'
+
+        if do_render_animation:
+            if animation_use_eevee:
+                scene.render.engine = 'BLENDER_EEVEE'
+            scene.render.filepath = os.path.join(output_filename_prefix, 'frames') + '/'
+            bpy.ops.render.render(animation=True)
+
+            # reset to cycles
+            scene.render.engine = 'CYCLES'
 
     if do_render:
 

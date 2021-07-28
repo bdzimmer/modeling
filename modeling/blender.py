@@ -277,3 +277,25 @@ def configure_cycles(
 
     scene.cycles.samples = samples
     scene.cycles.preview_samples = preview_samples
+
+
+def render_animation(
+        scene: btypes.Scene,
+        output_dirname: str,
+        frame_start: int, frame_end: int) -> None:
+    """render animation frames to a directory"""
+
+    # trailing slash is required here
+    scene.render.filepath = output_dirname + '/'
+
+    scene.frame_start = frame_start
+    scene.frame_end = frame_end
+
+    bpy.ops.render.render(animation=True)
+
+
+def render(output_filename: str) -> None:
+    """render a still image"""
+
+    bpy.ops.render.render()
+    bpy.data.images["Render Result"].save_render(filepath=output_filename)
