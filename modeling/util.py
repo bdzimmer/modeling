@@ -5,11 +5,13 @@ Common functions for nicer dealings with mesh objects.
 """
 
 # Copyright (c) 2019 Ben Zimmer. All rights reserved.
+import math
 
 from typing import Any, Union, Tuple, List, Callable
 
 import trimesh
 from trimesh import transformations
+from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
 
@@ -21,7 +23,7 @@ Y_HAT = np.array([0.0, 1.0, 0.0])
 Z_HAT = np.array([0.0, 0.0, 1.0])
 
 X_HAT_NEG = np.array([-1.0, 1.0, 1.0])
-
+Z_HAT_NEG = np.array([1.0, 1.0, -1.0])
 
 FULL = 2.0 * np.pi
 TAU = FULL
@@ -220,13 +222,16 @@ def face_normal(tri_verts):
 
 
 def union(meshes: List[Mesh]) -> Mesh:
-    """union with scad"""
-
-    meshes_tm = []
-    for mesh in meshes:
-        meshes_tm.append(trimesh.Trimesh(*mesh))
-
+    """union using scad"""
+    meshes_tm = [trimesh.Trimesh(*x) for x in meshes]
     res = trimesh.boolean.union(meshes_tm, engine='scad')
+    return res.vertices, res.faces
+
+
+def difference(meshes: List[Mesh]):
+    """difference using scad"""
+    meshes_tm = [trimesh.Trimesh(*x) for x in meshes]
+    res = trimesh.boolean.difference(meshes_tm, engine='scad')
     return res.vertices, res.faces
 
 
@@ -262,10 +267,31 @@ def view_mesh(mesh: Any) -> None:
     view.view(mesh, material)
 
 
+def plot_loop_2d(loop_verts):
+    """plot a 2d loop for debugging"""
+    plt.figure()
+    plt.axis('equal')
+    plt.fill(
+        loop_verts[:, 0], loop_verts[:, 1],
+        facecolor='none', edgecolor='blue', linewidth=2)
+    plt.scatter(
+        loop_verts[:, 0], loop_verts[:, 1],
+        color='blue')
+    plt.show()
+
+
 def mirror_x(mesh: Mesh) -> Mesh:
     """mirror mesh in x dimension (across y axis)"""
     return (
         mesh[0] * np.array([X_HAT_NEG]),
+        mesh[1][:, [2, 1, 0]]
+    )
+
+
+def mirror_z(mesh: Mesh) -> Mesh:
+    """mirror mesh in z dimension (across x axis)"""
+    return (
+        mesh[0] * np.array([Z_HAT_NEG]),
         mesh[1][:, [2, 1, 0]]
     )
 
@@ -287,3 +313,74 @@ def adjust_mesh(mesh: Mesh, select: Callable, modify: Callable) -> Mesh:
     return verts, faces
 
 
+# stuff for inset
+
+def inset_polygon(pts, amount) -> Verts:
+    """inset an arbitrary polygon"""
+    pts_a = [pts[-1]] + list(pts[:-1])
+    pts_b = list(pts)
+    pts_c = list(pts[1:]) + [pts[0]]
+    return np.array([
+        inset_point(a, b, c, amount)
+        for a, b, c in zip(pts_a, pts_b, pts_c)])
+
+
+def inset_quad(pt_a, pt_b, pt_c, pt_d, amount) -> Verts:
+    # the points go like this:
+    # b  a
+    # c  d
+
+    angles = [
+        (pt_d, pt_a, pt_b),
+        (pt_a, pt_b, pt_c),
+        (pt_b, pt_c, pt_d),
+        (pt_c, pt_d, pt_a)
+    ]
+
+    inset_pts = np.array([inset_point(*angle, amount) for angle in angles])
+
+    return inset_pts
+
+
+def inset_point(pt_a, pt_b, pt_c, amount):
+
+    #     b
+    #     .
+    # c       a
+
+    vec_0 = pt_a - pt_b
+    vec_0 = vec_0 / np.linalg.norm(vec_0)
+    vec_1 = pt_c - pt_b
+    vec_1 = vec_1 / np.linalg.norm(vec_1)
+
+    # there's probably a way to do this without trig / inverse
+    # but I won't worry about that for now
+    vec_dot = np.dot(vec_0, vec_1)
+
+    theta = math.acos(vec_dot)
+    half_theta = 0.5 * theta
+
+    offset = amount / math.tan(half_theta)
+    offset_vec = pt_b + vec_0 * offset
+
+    # # extra = np.array([
+    # #     pt_b + vec_0,
+    # #     pt_b + vec_1,
+    # #     pt_b + perp_vec
+    # #
+    # # ])
+    # plt.figure()
+    # plt.axis('equal')
+    # abc = np.array([pt_a, pt_b, pt_c])
+    # plt.scatter(abc[:, 0], abc[:, 1], color='blue')
+    # # plt.scatter(res[0], res[1], color='green')
+    # # plt.scatter(extra[:, 0], extra[:, 1], color='red')
+    # plt.show()
+
+    # now just have to add the amount perpendicular to the offset
+    perp_vec = vec_1 - vec_0 * vec_dot
+    perp_vec = perp_vec / np.linalg.norm(perp_vec)
+
+    res = offset_vec + perp_vec * amount
+
+    return res
