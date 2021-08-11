@@ -6,7 +6,6 @@ Automate the export of a Blender project.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
-import os
 import json
 import sys
 

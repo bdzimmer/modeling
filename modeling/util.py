@@ -5,8 +5,8 @@ Common functions for nicer dealings with mesh objects.
 """
 
 # Copyright (c) 2019 Ben Zimmer. All rights reserved.
-import math
 
+import math
 from typing import Any, Union, Tuple, List, Callable
 
 import trimesh
@@ -316,7 +316,7 @@ def adjust_mesh(mesh: Mesh, select: Callable, modify: Callable) -> Mesh:
 # stuff for inset
 
 def inset_polygon(pts, amount) -> Verts:
-    """inset an arbitrary polygon"""
+    """find an inset version of an arbitrary polygon"""
     pts_a = [pts[-1]] + list(pts[:-1])
     pts_b = list(pts)
     pts_c = list(pts[1:]) + [pts[0]]
@@ -326,6 +326,7 @@ def inset_polygon(pts, amount) -> Verts:
 
 
 def inset_quad(pt_a, pt_b, pt_c, pt_d, amount) -> Verts:
+    """find an insert version of a quad"""
     # the points go like this:
     # b  a
     # c  d
@@ -343,6 +344,8 @@ def inset_quad(pt_a, pt_b, pt_c, pt_d, amount) -> Verts:
 
 
 def inset_point(pt_a, pt_b, pt_c, amount):
+    """given three points in counterclockwise order,
+    find an inset version of the second point"""
 
     #     b
     #     .
