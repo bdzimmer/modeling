@@ -120,11 +120,16 @@ def set_transformation(
         transf: Dict[str, str]) -> None:
     """set the transformation of an object"""
 
-    trans = transf['translation']
-    rot = transf['rotation']
+    trans = transf.get('translation')
 
-    obj.location = trans
-    # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+    if trans is not None:
+        obj.location = trans
+        # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
+
+    rot = transf.get('rotation')
+
+    if rot is None:
+        return
 
     if isinstance(rot, dict):
         point_at_obj = blender.get_obj_by_name(rot['point_at'])
