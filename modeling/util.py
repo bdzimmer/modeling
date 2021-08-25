@@ -42,17 +42,19 @@ def concat(meshes: List[Mesh]) -> Mesh:
     return tm_mesh.vertices, tm_mesh.faces
 
 
-def concat_tm(meshes):
-    """for now"""
+def concat_tm(meshes: List[trimesh.Trimesh]) -> trimesh.Trimesh:
+    """concatenate trimeshes"""
     return trimesh.util.concatenate(meshes)
 
 
 def loop(xs: Any) -> List:
+    """append the starting element of a list to the end"""
     xs = list(xs)
     return xs + [xs[0]]
 
 
 def rev(xs: Any) -> List:
+    """convert to a list and reverse"""
     xs = list(xs)
     return list(reversed(xs))
 
@@ -81,6 +83,13 @@ def translate(
     return mesh[0] + trans, mesh[1]
 
 
+def rotate(mesh: Mesh, rot_mat: np.ndarray) -> Mesh:
+    """rotate verts"""
+    verts, faces = mesh
+    verts = np.transpose(np.dot(rot_mat, np.transpose(verts)))
+    return verts, faces
+
+
 def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
     """rotate verts"""
     return np.transpose(np.dot(rot_mat, np.transpose(verts)))
@@ -104,15 +113,16 @@ def transform(mesh: Mesh, mat: np.ndarray) -> Mesh:
     # return trimesh.vertices, trimesh.faces
 
 
-# also sometimes known as "circular array"
-
 def spin(mesh, n_dups, offset):
+    """repeate meshes in a circle"""
+    # also sometimes known as "circular array"
     return [
         transform(mesh, rotation_y(x / n_dups * FULL + offset))
         for x in range(n_dups)]
 
 
 def spin_frac(mesh, n_dups, offset, frac):
+    """repeat meshes in a fraction of a circle, including start and end"""
     return [
         transform(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
         for x in range(n_dups)]
