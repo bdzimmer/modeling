@@ -10,7 +10,8 @@ import math
 from typing import Any, Union, Tuple, List, Callable
 
 import trimesh
-from trimesh import transformations
+import trimesh.transformations
+import trimesh.intersections
 from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
@@ -61,17 +62,17 @@ def rev(xs: Any) -> List:
 
 def rotation_x(angle):
     """create matrix for rotation around x axis"""
-    return transformations.rotation_matrix(angle, X_HAT)
+    return trimesh.transformations.rotation_matrix(angle, X_HAT)
 
 
 def rotation_y(angle):
     """create matrix for rotation around y axis"""
-    return transformations.rotation_matrix(angle, Y_HAT)
+    return trimesh.transformations.rotation_matrix(angle, Y_HAT)
 
 
 def rotation_z(angle):
     """create matrix for rotation around z axis"""
-    return transformations.rotation_matrix(angle, Z_HAT)
+    return trimesh.transformations.rotation_matrix(angle, Z_HAT)
 
 
 # TODO: still not clear on whether the copy() calls are required
@@ -397,3 +398,33 @@ def inset_point(pt_a, pt_b, pt_c, amount):
     res = offset_vec + perp_vec * amount
 
     return res
+
+
+def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
+    """symmetrize mesh around origin in any direction"""
+
+    tm_mesh = tm(*mesh)
+    tm_mesh_half = trimesh.intersections.slice_mesh_plane(
+        tm_mesh,
+        plane_normal,
+        (0, 0, 0)
+    )
+
+    # verts_flipped = tm_mesh_half.vertices * [[-1, 1, 1]]
+    verts_flipped = tm_mesh_half.vertices - 2.0 * (
+            np.expand_dims(np.dot(tm_mesh_half.vertices, plane_normal), axis=1) * [plane_normal])
+    tm_mesh_half_flipped = trimesh.Trimesh(
+        vertices=verts_flipped,
+        faces=np.flip(tm_mesh_half.faces, axis=1),
+        process=False
+    )
+
+    tm_mesh_whole = concat_tm([tm_mesh_half, tm_mesh_half_flipped])
+    print('before process:', tm_mesh_whole.vertices.shape, tm_mesh_whole.faces.shape)
+    tm_mesh_whole = trimesh.Trimesh(
+        tm_mesh_whole.vertices,
+        tm_mesh_whole.faces,
+        process=True)
+    print('after process:', tm_mesh_whole.vertices.shape, tm_mesh_whole.faces.shape)
+
+    return tm_mesh_whole.vertices, tm_mesh_whole.faces
