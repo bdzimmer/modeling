@@ -66,6 +66,10 @@ def add_model(
         obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
         bpy.ops.object.shade_smooth()
 
+    if model_config.get('hide', False):
+        obj.hide_set(True)
+        obj.hide_render = True
+
     if obj.data is not None:
 
         # create a new material for the object
@@ -120,41 +124,40 @@ def set_transformation(
         transf: Dict[str, str]) -> None:
     """set the transformation of an object"""
 
-    trans = transf.get('translation')
+    scale = transf.get('scale')
+    if scale is not None:
+        obj.scale = scale
 
+    trans = transf.get('translation')
     if trans is not None:
         obj.location = trans
-        # blender.point_at(cam, root_obj, 'TRACK_NEGATIVE_Z', 'UP_Y')
 
     rot = transf.get('rotation')
-
-    if rot is None:
-        return
-
-    if isinstance(rot, dict):
-        point_at_obj = blender.get_obj_by_name(rot['point_at'])
-        blender.point_at(
-            obj,
-            point_at_obj,
-            blender.TRACK_AXIS[rot.get('track_axis', '-z')],
-            blender.UP_AXIS[rot.get('up_axis', 'y')])
-    else:
-        if len(rot) == 3:
-            # I think Panda3D's HPR is intrinsic
-            # If Blender is extrinsic, the order can just be reversed, LOL
-            # rot is in HPR form
-            # H -> Z
-            # P -> X
-            # R -> Y
-            obj.rotation_mode = 'ZXY'
-            obj.rotation_euler = (
-                math.radians(rot[1]),  # X == (ZXY)[1]
-                math.radians(rot[2]),  # Y == (ZXY)[2]
-                math.radians(rot[0]),  # Z == (ZXY)[0]
-            )
+    if rot is not None:
+        if isinstance(rot, dict):
+            point_at_obj = blender.get_obj_by_name(rot['point_at'])
+            blender.point_at(
+                obj,
+                point_at_obj,
+                blender.TRACK_AXIS[rot.get('track_axis', '-z')],
+                blender.UP_AXIS[rot.get('up_axis', 'y')])
         else:
-            obj.rotation_mode = 'QUATERNION'
-            obj.rotation_quaternion = rot
+            if len(rot) == 3:
+                # I think Panda3D's HPR is intrinsic
+                # If Blender is extrinsic, the order can just be reversed, LOL
+                # rot is in HPR form
+                # H -> Z
+                # P -> X
+                # R -> Y
+                obj.rotation_mode = 'ZXY'
+                obj.rotation_euler = (
+                    math.radians(rot[1]),  # X == (ZXY)[1]
+                    math.radians(rot[2]),  # Y == (ZXY)[2]
+                    math.radians(rot[0]),  # Z == (ZXY)[0]
+                )
+            else:
+                obj.rotation_mode = 'QUATERNION'
+                obj.rotation_quaternion = rot
 
 
 def import_obj(filename) -> bpy.types.Object:
