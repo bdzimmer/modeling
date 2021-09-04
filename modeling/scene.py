@@ -94,10 +94,13 @@ def add_model(
 
         color = model_config.get('color')
         if color is not None:
-            bsdf.inputs[0].default_value = color
+            bsdf.inputs['Base Color'].default_value = color
 
         mat = model_config.get('material')
         if mat is not None:
+            diffuse = mat.get('diffuse')
+            if diffuse is not None:
+                bsdf.inputs['Base Color'].default_value = diffuse
             emission = mat.get('emission')
             if emission is not None:
                 bsdf.inputs['Emission'].default_value = emission
@@ -118,6 +121,11 @@ def add_model(
                 bpy.ops.object.editmode_toggle()
                 bpy.ops.mesh.tris_convert_to_quads()
                 bpy.ops.object.editmode_toggle()
+
+            disable_shadows = props.get('blender:shadow_disable', False)
+            if disable_shadows:
+                obj.cycles_visibility.shadow = False
+                obj.active_material.shadow_method = 'NONE'
 
     children = model_config.get('children', [])
     for child in children:
