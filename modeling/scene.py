@@ -127,6 +127,10 @@ def add_model(
                 obj.cycles_visibility.shadow = False
                 obj.active_material.shadow_method = 'NONE'
 
+            emission_strength = props.get('blender:emission_strength')
+            if emission_strength is not None:
+                bsdf.inputs['Emission Strength'].default_value = emission_strength
+
     children = model_config.get('children', [])
     for child in children:
         add_model(child, obj)
