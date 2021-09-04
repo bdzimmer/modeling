@@ -7,11 +7,9 @@ Use Blender to render a scene to one or more image files.
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
 import pickle
-
 import os
 import json
 import sys
-
 
 import bpy
 
@@ -188,15 +186,11 @@ def main(args):
             for name, entity in state['objects'].items():
                 print('\t' + name)
                 obj = blender.get_obj_by_name(name)
-                obj.rotation_mode = 'QUATERNION'
-
-                if entity['transformation'].get('translation') is not None:
-                    obj.location = tuple(entity['transformation']['translation'])
-                    obj.keyframe_insert('location')
-
-                if entity['transformation'].get('rotation') is not None:
-                    obj.rotation_quaternion = tuple(entity['transformation']['rotation'])
-                    obj.keyframe_insert('rotation_quaternion')
+                if obj is not None:
+                    msc.add_keyframes(obj, entity.get('transformation'), entity.get('hide'))
+                    # TODO: additional beam specific stuff would be handled here
+                else:
+                    print('\t\tobject not found')
 
         scene.frame_set(0)
 

@@ -12,12 +12,18 @@ Utilties for working with my own scene JSON format.
 # * filename - filename to load, usually obj
 # * color - default / overall color for the model
 # * auto_smooth_angle - if present, enable auto smoothing at the specified angle
-# * transformation - object with 'rotation' and 'translation' fields. Defaults
-#     to identity transformation if not present.
+# * transformation - object with 'rotation', 'translation', and 'scale' fields.
+#     Defaults to identity transformation if not present.
+# * hide - if true, hide the model in both viewport and render.
 # * props - optional properties such as modifiers
 #     * blender:wireframe - wireframe modifier
 # * children - a list of additional model objects that should be positioned
 #     relative to this one
+
+# Animation keyframe fields:
+
+# * transformation
+# * hide
 
 
 # TODO: make all these field names constants, for goodness sakes
@@ -67,7 +73,8 @@ def add_model(
         bpy.ops.object.shade_smooth()
 
     if model_config.get('hide', False):
-        obj.hide_set(True)
+        # obj.hide_set(True)
+        obj.hide_viewport = True
         obj.hide_render = True
 
     if obj.data is not None:
@@ -158,6 +165,41 @@ def set_transformation(
             else:
                 obj.rotation_mode = 'QUATERNION'
                 obj.rotation_quaternion = rot
+
+
+def add_keyframes(
+        obj,
+        transformation: Optional[Dict],
+        hide: Optional[bool]) -> None:
+    """add a keyframe based on a transformation or visibiltiy"""
+
+    # TODO: think about combining this with modeling.scene.set_transformation
+    #       like a flag that would add keyframes
+
+    if transformation is not None:
+
+        obj.rotation_mode = 'QUATERNION'
+
+        translation = transformation.get('translation')
+        if translation is not None:
+            obj.location = tuple(translation)
+            obj.keyframe_insert('location')
+
+        rotation = transformation.get('rotation')
+        if rotation is not None:
+            obj.rotation_quaternion = tuple(rotation)
+            obj.keyframe_insert('rotation_quaternion')
+
+        scale = transformation.get('scale')
+        if scale is not None:
+            obj.scale = tuple(scale)
+            obj.keyframe_insert(data_path='scale')
+
+    if hide is not None:
+        obj.hide_viewport = hide
+        obj.hide_render = hide
+        obj.keyframe_insert(data_path='hide_viewport')
+        obj.keyframe_insert(data_path='hide_render')
 
 
 def import_obj(filename) -> bpy.types.Object:
