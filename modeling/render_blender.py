@@ -187,7 +187,12 @@ def main(args):
                 print('\t' + name)
                 obj = blender.get_obj_by_name(name)
                 if obj is not None:
-                    msc.add_keyframes(obj, entity.get('transformation'), entity.get('hide'))
+                    print('\t\t', entity)
+                    msc.add_keyframes(
+                        obj,
+                        entity.get('transformation'),
+                        entity.get('nodes'),
+                        entity.get('hide'))
                     # TODO: additional beam specific stuff would be handled here
                 else:
                     print('\t\tobject not found')

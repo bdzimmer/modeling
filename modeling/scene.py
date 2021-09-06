@@ -72,11 +72,6 @@ def add_model(
         obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
         bpy.ops.object.shade_smooth()
 
-    if model_config.get('hide', False):
-        # obj.hide_set(True)
-        obj.hide_viewport = True
-        obj.hide_render = True
-
     if obj.data is not None:
 
         # create a new material for the object
@@ -110,6 +105,27 @@ def add_model(
 
         if props is not None:
 
+            # extreme hack
+            materials_library = props.get('blender:materials_library')
+            if materials_library is not None:
+
+                # TODO: make this more robust
+                bpy.context.scene.matlib.lib_index = materials_library['lib_index']
+                bpy.context.scene.matlib.mat_index = materials_library['mat_index']
+                obj.select_set(True)
+                bpy.context.scene.matlib.apply(bpy.context)
+
+                if materials_library.get('copy', True):
+                    mat = obj.active_material
+                    mat_name = obj.name + ' - ' + mat.name
+                    # mat = mat.copy()
+                    mat = mat.make_local()  # .copy() will share animation keyframes
+                    mat.name = mat_name
+
+                    obj.active_material = mat
+
+                obj.select_set(False)
+
             wireframe = props.get('blender:wireframe')
             if wireframe is not None:
                 # required to add modifiers
@@ -130,6 +146,15 @@ def add_model(
             emission_strength = props.get('blender:emission_strength')
             if emission_strength is not None:
                 bsdf.inputs['Emission Strength'].default_value = emission_strength
+
+            alpha = props.get('blender:alpha')
+            if alpha is not None:
+                bsdf.inputs['Alpha'].default_value = alpha
+
+    if model_config.get('hide', False):
+        # obj.hide_set(True)
+        obj.hide_viewport = True
+        obj.hide_render = True
 
     children = model_config.get('children', [])
     for child in children:
@@ -182,6 +207,7 @@ def set_transformation(
 def add_keyframes(
         obj,
         transformation: Optional[Dict],
+        nodes: Optional[Dict],
         hide: Optional[bool]) -> None:
     """add a keyframe based on a transformation or visibiltiy"""
 
@@ -206,6 +232,16 @@ def add_keyframes(
         if scale is not None:
             obj.scale = tuple(scale)
             obj.keyframe_insert(data_path='scale')
+
+    if nodes is not None:
+        print('\t\t', nodes)
+        material = obj.data.materials[0]
+        print('\t\t', material.name)
+        for (node_name, node_input_name), value in nodes.items():
+            node = material.node_tree.nodes[node_name]
+            node_input = node.inputs[node_input_name]
+            node_input.default_value = value
+            node_input.keyframe_insert(data_path='default_value')
 
     if hide is not None:
         obj.hide_viewport = hide
