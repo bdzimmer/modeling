@@ -180,14 +180,16 @@ def main(args):
             obj.rotation_mode = 'QUATERNION'
 
         for frame, state in enumerate(states):
-            print(frame, state)
+            # print(frame, state)
+            print(frame, '/', len(states), flush=True)
+
             scene.frame_set(frame)
 
             for name, entity in state['objects'].items():
-                print('\t' + name)
+                # print('\t' + name)
                 obj = blender.get_obj_by_name(name)
                 if obj is not None:
-                    print('\t\t', entity)
+                    # print('\t\t', entity)
                     msc.add_keyframes(
                         obj,
                         entity.get('transformation'),

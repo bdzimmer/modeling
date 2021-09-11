@@ -10,6 +10,7 @@ Utilties for working with my own scene JSON format.
 
 # * name - name of model
 # * filename - filename to load, usually obj
+# * copy - name of other model to copy mesh data from
 # * color - default / overall color for the model
 # * auto_smooth_angle - if present, enable auto smoothing at the specified angle
 # * transformation - object with 'rotation', 'translation', and 'scale' fields.
@@ -55,8 +56,21 @@ def add_model(
         obj = import_obj(model_config['filename'])
         obj.name = name
     else:
-        obj = bpy.data.objects.new(name, None)
-        bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+        copy_name = model_config.get('copy')
+        if copy_name is None:
+            # create empty
+            obj = bpy.data.objects.new(name, None)
+            bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+        else:
+            # instance another object
+            obj_copy = bpy.data.objects.get(copy_name)
+            if obj_copy is not None:
+                obj = bpy.data.objects.new(name, obj_copy.data)
+                bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+            else:
+                print(f'object {copy_name} not found to instance')
+
+
 
     if parent is not None:
         obj.parent = parent
