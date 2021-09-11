@@ -70,8 +70,6 @@ def add_model(
             else:
                 print(f'object {copy_name} not found to instance')
 
-
-
     if parent is not None:
         obj.parent = parent
 
