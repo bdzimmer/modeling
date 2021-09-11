@@ -12,6 +12,7 @@ Utilties for working with my own scene JSON format.
 # * filename - filename to load, usually obj
 # * copy - name of other model to copy mesh data from
 # * color - default / overall color for the model
+# * material - material information
 # * auto_smooth_angle - if present, enable auto smoothing at the specified angle
 # * transformation - object with 'rotation', 'translation', and 'scale' fields.
 #     Defaults to identity transformation if not present.
@@ -86,31 +87,48 @@ def add_model(
 
     if obj.data is not None:
 
-        # create a new material for the object
-        # not sure this is correct
-        # material = bpy.data.materials['Default OBJ']
-        material = bpy.data.materials.new(name=name)
-        material.use_nodes = True
-
-        if obj.data.materials:
-            obj.data.materials[0] = material
-        else:
-            obj.data.materials.append(material)
-
-        bsdf = material.node_tree.nodes['Principled BSDF']
-
-        color = model_config.get('color')
-        if color is not None:
-            bsdf.inputs['Base Color'].default_value = color
-
         mat = model_config.get('material')
+
         if mat is not None:
-            diffuse = mat.get('diffuse')
-            if diffuse is not None:
-                bsdf.inputs['Base Color'].default_value = diffuse
-            emission = mat.get('emission')
-            if emission is not None:
-                bsdf.inputs['Emission'].default_value = emission
+
+            # TODO: delete default material
+
+            copy_name = mat.get('copy')
+
+            if copy_name is not None:
+                # instance another material
+                mat_copy = bpy.data.materials.get(copy_name)
+                if mat_copy is not None:
+                    material = mat_copy
+                    # bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+                else:
+                    print(f'material {copy_name} not found to instance')
+
+            else:
+
+                # create a new material for the object
+                # not sure this is correct
+                # material = bpy.data.materials['Default OBJ']
+                material = bpy.data.materials.new(name=name)
+                material.use_nodes = True
+
+                bsdf = material.node_tree.nodes['Principled BSDF']
+
+                color = model_config.get('color')
+                if color is not None:
+                    bsdf.inputs['Base Color'].default_value = color
+
+                diffuse = mat.get('diffuse')
+                if diffuse is not None:
+                    bsdf.inputs['Base Color'].default_value = diffuse
+                emission = mat.get('emission')
+                if emission is not None:
+                    bsdf.inputs['Emission'].default_value = emission
+
+            if obj.data.materials:
+                obj.data.materials[0] = material
+            else:
+                obj.data.materials.append(material)
 
         # additional properties
         props = model_config.get('props')
