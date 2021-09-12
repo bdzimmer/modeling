@@ -127,6 +127,18 @@ def get_obj_by_name(name: str) -> bpy.types.Object:
     return bpy.context.scene.objects.get(name)
 
 
+def add_subsurface(
+        obj: btypes.Object,
+        levels: int,
+        render_levels: int,
+        use_adaptive_subdivision: bool) -> None:
+    """add a subsurface modifier"""
+    sub = obj.modifiers.new('Subsurface', 'SUBSURF')
+    sub.levels = levels
+    sub.render_levels = render_levels
+    obj.cycles.use_adaptive_subdivision = use_adaptive_subdivision
+
+
 def add_link(mat, conn_out, conn_in):
     """add a link between an output of one shader and an input of another"""
 

@@ -27,6 +27,17 @@ Utilties for working with my own scene JSON format.
 # * transformation
 # * hide
 
+# Material fields:
+# * name
+# * copy
+# * color
+# * diffuse
+# * emission
+# * python
+#    * func
+#    * paths
+
+
 
 # TODO: make all these field names constants, for goodness sakes
 
@@ -36,7 +47,7 @@ import math
 
 import bpy
 
-from modeling import blender
+from modeling import blender, materials
 
 
 # TODO: figure out how to control the name of the default collection
@@ -58,19 +69,19 @@ def add_model(
         bpy.data.materials.remove(obj.data.materials[0])
         obj.name = name
     else:
-        copy_name = model_config.get('copy')
-        if copy_name is None:
+        instance_name = model_config.get('instance')
+        if instance_name is None:
             # create empty
             obj = bpy.data.objects.new(name, None)
             bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
         else:
             # instance another object
-            obj_copy = bpy.data.objects.get(copy_name)
+            obj_copy = bpy.data.objects.get(instance_name)
             if obj_copy is not None:
                 obj = bpy.data.objects.new(name, obj_copy.data)
                 bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
             else:
-                print(f'object {copy_name} not found to instance')
+                print(f'object {instance_name} not found to instance')
 
     if parent is not None:
         obj.parent = parent
@@ -92,24 +103,34 @@ def add_model(
 
         if mat is not None:
 
-            # TODO: delete default material
+            instance_name = mat.get('instance')
+            mat_python = mat.get('python')
 
-            copy_name = mat.get('copy')
-
-            if copy_name is not None:
+            if instance_name is not None:
                 # instance another material
-                mat_copy = bpy.data.materials.get(copy_name)
+
+                mat_copy = bpy.data.materials.get(instance_name)
                 if mat_copy is not None:
                     material = mat_copy
                     # bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
                 else:
-                    print(f'material {copy_name} not found to instance')
+                    print(f'material {instance_name} not found to instance')
+
+            elif mat_python is not None:
+                # load a material from a python function
+
+                blender.select(obj)
+
+                material = materials.material_python(
+                    name=mat['name'],
+                    obj=obj,
+                    func_desc=mat_python['func'],
+                    paths=mat_python['paths']
+                )
 
             else:
-
                 # create a new material for the object
-                # not sure this is correct
-                # material = bpy.data.materials['Default OBJ']
+
                 material = bpy.data.materials.new(name=name)
                 material.use_nodes = True
 
@@ -181,6 +202,15 @@ def add_model(
             alpha = props.get('blender:alpha')
             if alpha is not None:
                 bsdf.inputs['Alpha'].default_value = alpha
+
+            subsurf = props.get('blender:subsurface')
+            if subsurf is not None:
+                blender.add_subsurface(
+                    obj,
+                    levels=subsurf['levels'],
+                    render_levels=subsurf['render_levels'],
+                    use_adaptive_subdivision=subsurf['use_adaptive_subdivision']
+                )
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
