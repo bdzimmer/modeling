@@ -55,6 +55,7 @@ def add_model(
     model_filename = model_config.get('filename')
     if model_filename is not None:
         obj = import_obj(model_config['filename'])
+        bpy.data.materials.remove(obj.data.materials[0])
         obj.name = name
     else:
         copy_name = model_config.get('copy')

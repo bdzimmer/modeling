@@ -64,6 +64,28 @@ def delete_all_objects():
     clear(bpy.data.meshes)
 
 
+def purge_orphans():
+    """purge orphan data-blocks"""
+
+    # https://blender.stackexchange.com/questions/121531/how-do-i-delete-unused-data
+
+    for block in bpy.data.meshes:
+        if block.users == 0:
+            bpy.data.meshes.remove(block)
+
+    for block in bpy.data.materials:
+        if block.users == 0:
+            bpy.data.materials.remove(block)
+
+    for block in bpy.data.textures:
+        if block.users == 0:
+            bpy.data.textures.remove(block)
+
+    for block in bpy.data.images:
+        if block.users == 0:
+            bpy.data.images.remove(block)
+
+
 def reset_scene():
     """reset the scene"""
     bpy.context.scene.cursor.location = (0, 0, 0)

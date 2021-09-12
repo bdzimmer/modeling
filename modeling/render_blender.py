@@ -93,6 +93,8 @@ def main(args):
         for model in config['models'][1:]:
             msc.add_model(model, None)
 
+    # blender.purge_orphans()
+
     # apply offset from center in configuration
     root_obj.location = root_obj_loc
 
@@ -202,10 +204,15 @@ def main(args):
         scene.frame_set(0)
 
         for config_model in config['models']:
-            obj = blender.get_obj_by_name(config_model['name'])
-            for fcurve in obj.animation_data.action.fcurves:
-                for keyframe in fcurve.keyframe_points:
-                    keyframe.interpolation = 'CONSTANT'
+            name = config_model['name']
+            obj = blender.get_obj_by_name(name)
+            action = obj.animation_data.action
+            if action is not None:
+                for fcurve in action.fcurves:
+                    for keyframe in fcurve.keyframe_points:
+                        keyframe.interpolation = 'CONSTANT'
+            else:
+                print(f'object {name} has no action')
 
         if do_render_animation:
             if animation_use_eevee:
