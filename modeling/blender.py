@@ -175,6 +175,8 @@ def arrange_nodes(columns):
                 node.location = (x_pos, -y_pos)
                 y_pos = y_pos + node.dimensions[1] + y_gap
             x_pos = x_pos + max_width + x_gap
+        elif column is None:
+            x_pos = x_pos + x_gap * 4
         else:
             node = column
             node.location = (x_pos, -y_pos)
