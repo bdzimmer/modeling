@@ -64,6 +64,7 @@ def main(args):
     do_render_animation = config_render.get('do_render_animation', False)
     do_outline = config_render.get('do_outline', False)
     do_quit = config_render.get('do_quit', True)
+    root_offset = config_render.get('root_offset', True)
 
     render_resolution = config_render.get('render_resolution', [1920, 1080])
     animation_use_eevee = config_render.get('animation_use_eevee', False)
@@ -96,7 +97,8 @@ def main(args):
     # blender.purge_orphans()
 
     # apply offset from center in configuration
-    root_obj.location = root_obj_loc
+    if root_offset:
+        root_obj.location = root_obj_loc
 
     # ~~~~ special origin object
 
