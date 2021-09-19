@@ -68,6 +68,7 @@ def main(args):
 
     render_resolution = config_render.get('render_resolution', [1920, 1080])
     animation_use_eevee = config_render.get('animation_use_eevee', False)
+    render_use_eevee = config_render.get('render_use_eevee', False)
     render_eevee_use_bloom = config_render.get('render_eevee_use_bloom', False)
 
     ortho_scale = config_render.get('ortho_scale', 1.1)
@@ -228,6 +229,9 @@ def main(args):
     if do_render:
 
         # standard render
+        if render_use_eevee:
+            scene.render.engine = 'BLENDER_EEVEE'
+
         render(output_filename)
 
         if do_outline:
