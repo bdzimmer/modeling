@@ -13,7 +13,7 @@ import sys
 
 import bpy
 
-# TODO: there is probably a way to find the script directory at runtime
+# TODO: there is probably a better way to find the script directory at runtime
 CODE_DIRNAME = '/home/ben/code/modeling'
 
 if CODE_DIRNAME not in sys.path:
@@ -27,6 +27,26 @@ CYCLES_RENDER_SAMPLES = 8
 CYCLES_PREVIEW_SAMPLES = 8
 
 LIGHT_SUN = 'sun'
+
+
+# keys, mainly useed for the config render portion of the input config
+
+SIZE_KEY = 'size'
+CENTER_KEY = 'center'
+POS_SCALE_KEY = 'pos_scale'
+FILM_TRANSPARENT_KEY = 'film_transparent'
+LINE_THICKNESS_KEY = 'line_thickness'
+ORTHO_SCALE_KEY = 'ortho_scale'
+RENDER_EEVEE_USE_BLOOM_KEY = 'render_eevee_use_bloom'
+RENDER_USE_EEVEE_KEY = 'render_use_eevee'
+ANIMATION_USE_EEVEE_KEY = 'animation_use_eevee'
+RENDER_RESOLUTION_KEY = 'render_resolution'
+ROOT_OFFSET_KEY = 'root_offset'
+DO_QUIT_KEY = 'do_quit'
+DO_OUTLINE_KEY = 'do_outline'
+DO_RENDER_ANIMATION_KEY = 'do_render_animation'
+DO_RENDER_KEY = 'do_render'
+RENDER_BLENDER_KEY = 'render_blender'
 
 
 def main(args):
@@ -58,27 +78,27 @@ def main(args):
 
     # some render_blender specific settings
 
-    config_render = config['render_blender']
+    config_render = config[RENDER_BLENDER_KEY]
 
-    do_render = config_render.get('do_render', True)
-    do_render_animation = config_render.get('do_render_animation', False)
-    do_outline = config_render.get('do_outline', False)
-    do_quit = config_render.get('do_quit', True)
-    root_offset = config_render.get('root_offset', True)
+    do_render = config_render.get(DO_RENDER_KEY, True)
+    do_render_animation = config_render.get(DO_RENDER_ANIMATION_KEY, False)
+    do_outline = config_render.get(DO_OUTLINE_KEY, False)
+    do_quit = config_render.get(DO_QUIT_KEY, True)
+    root_offset = config_render.get(ROOT_OFFSET_KEY, True)
 
-    render_resolution = config_render.get('render_resolution', [1920, 1080])
-    animation_use_eevee = config_render.get('animation_use_eevee', False)
-    render_use_eevee = config_render.get('render_use_eevee', False)
-    render_eevee_use_bloom = config_render.get('render_eevee_use_bloom', False)
+    render_resolution = config_render.get(RENDER_RESOLUTION_KEY, [1920, 1080])
+    animation_use_eevee = config_render.get(ANIMATION_USE_EEVEE_KEY, False)
+    render_use_eevee = config_render.get(RENDER_USE_EEVEE_KEY, False)
+    render_eevee_use_bloom = config_render.get(RENDER_EEVEE_USE_BLOOM_KEY, False)
 
-    ortho_scale = config_render.get('ortho_scale', 1.1)
-    line_thickness = config_render.get('line_thickness', 1.0)
-    film_transparent = config_render.get('film_transparent', True)
+    ortho_scale = config_render.get(ORTHO_SCALE_KEY, 1.1)
+    line_thickness = config_render.get(LINE_THICKNESS_KEY, 1.0)
+    film_transparent = config_render.get(FILM_TRANSPARENT_KEY, True)
 
-    scale = config_render.get('pos_scale', 1.5)
-    center = config_render['center']
-    pos = config_render['size'] * scale
-    clip_end = config_render['size'] * clip_scale
+    scale = config_render.get(POS_SCALE_KEY, 1.5)
+    center = config_render[CENTER_KEY]
+    pos = config_render[SIZE_KEY] * scale
+    clip_end = config_render[SIZE_KEY] * clip_scale
 
     root_obj_loc = (-center[0], -center[1], -center[2])
 
@@ -113,7 +133,7 @@ def main(args):
 
     bpy.ops.object.camera_add()
     cam = bpy.context.object
-    cam.name = "Camera"
+    cam.name = 'Camera'
     cam.data.clip_end = clip_end
 
     msc.set_transformation(cam, config['camera']['transformation'])
