@@ -6,12 +6,14 @@ Use Blender to render a scene to one or more image files.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
+import math
 import pickle
 import os
 import json
 import sys
 
 import bpy
+import bpy.types as btypes
 
 # TODO: there is probably a better way to find the script directory at runtime
 CODE_DIRNAME = '/home/ben/code/modeling'
@@ -19,7 +21,7 @@ CODE_DIRNAME = '/home/ben/code/modeling'
 if CODE_DIRNAME not in sys.path:
     sys.path.append(CODE_DIRNAME)
 
-from modeling import blender, scene as msc
+from modeling import blender, scene as msc, materials as ms
 
 DO_RENDER = True
 
@@ -47,6 +49,7 @@ DO_OUTLINE_KEY = 'do_outline'
 DO_RENDER_ANIMATION_KEY = 'do_render_animation'
 DO_RENDER_KEY = 'do_render'
 RENDER_BLENDER_KEY = 'render_blender'
+WORLD_KEY = 'world'
 
 
 def main(args):
@@ -100,6 +103,8 @@ def main(args):
     pos = config_render[SIZE_KEY] * scale
     clip_end = config_render[SIZE_KEY] * clip_scale
 
+    world_config = config_render.get(WORLD_KEY, {})
+
     root_obj_loc = (-center[0], -center[1], -center[2])
 
     # ~~~~ clear scene
@@ -137,6 +142,10 @@ def main(args):
     cam.data.clip_end = clip_end
 
     msc.set_transformation(cam, config['camera']['transformation'])
+    fov = config['camera'].get('fov')
+    if fov is not None:
+        cam.data.lens_unit = 'FOV'
+        cam.data.angle = math.radians(fov)
 
     bpy.context.scene.camera = cam
 
@@ -182,6 +191,45 @@ def main(args):
     # bpy.context.scene.render.filepath = working_dirname + '/'
     # bpy.context.scene.cycles.use_denoising = True
     scene.view_settings.look = 'Medium High Contrast'
+
+    if world_config:
+
+        # bpy.context.space_data.shader_type = 'WORLD'
+
+        add_node = ms.build_add_node(scene.world)
+
+        tex_env = add_node(btypes.ShaderNodeTexEnvironment)
+        tex_env.image = bpy.data.images.load(world_config['tex_environment_filepath'])
+        tex_env.interpolation = 'Cubic'
+
+        hsv = add_node(btypes.ShaderNodeHueSaturation)
+        hsv.inputs['Hue'].default_value = world_config.get('hue', 0.5)
+        hsv.inputs['Saturation'].default_value = world_config.get('saturation', 1.0)
+        hsv.inputs['Value'].default_value = world_config.get('value', 1.0)
+
+        bright_contrast = add_node(btypes.ShaderNodeBrightContrast)
+        bright_contrast.inputs['Bright'].default_value = world_config.get('brightness', 0.0)
+        bright_contrast.inputs['Contrast'].default_value = world_config.get('contrast', 0.0)
+
+        world_output = scene.world.node_tree.nodes['World Output']
+
+        links = [
+            ((tex_env, 'Color'), (hsv, 'Color')),
+            ((hsv, 'Color'), (bright_contrast, 'Color')),
+            ((bright_contrast, 'Color'), (background, 'Color'))
+        ]
+        for link in links:
+            blender.add_link(scene.world, *link)
+
+        blender.arrange_nodes([
+            add_node,
+            tex_env,
+            bright_contrast,
+            background,
+            world_output
+        ])
+
+        # bpy.context.space_data.shader_type = 'OBJECT'
 
     # ~~~~ animations
 
