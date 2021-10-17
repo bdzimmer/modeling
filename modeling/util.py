@@ -400,6 +400,55 @@ def inset_point(pt_a, pt_b, pt_c, amount):
     return res
 
 
+def bevel_polygon(pts, bevel_amount, inset_amount):
+    """bevel a polygon"""
+
+    pts_a = [pts[-1]] + list(pts[:-1])
+    pts_b = list(pts)
+    pts_c = list(pts[1:]) + [pts[0]]
+
+    pts_bev = [
+        bevel_point(a, b, c, bevel_amount)
+        for a, b, c in zip(pts_a, pts_b, pts_c)
+    ]
+
+    pts_inset = [
+        inset_point(a, b, c, inset_amount)
+        for a, b, c in zip(pts_a, pts_b, pts_c)
+    ]
+
+    triples = [
+        (a, b, c)
+        for (a, c), b in zip(pts_bev, pts_inset)
+    ]
+
+    return np.array([y for x in triples for y in x])
+
+
+def bevel_point(pt_a, pt_b, pt_c, amount):
+    """
+
+    Given 3 points, find two additional points on either side of the central point (b)
+
+    """
+
+    #     b
+    #     .
+    # c       a
+
+    pt_a_bev_diff = pt_a - pt_b
+    pt_a_bev_diff = pt_a_bev_diff / np.linalg.norm(pt_a_bev_diff)
+    pt_a_bev = pt_b + pt_a_bev_diff * amount
+
+    pt_c_bev_diff = pt_c - pt_b
+    pt_c_bev_diff = pt_c_bev_diff / np.linalg.norm(pt_c_bev_diff)
+    pt_c_bev = pt_b + pt_c_bev_diff * amount
+
+    return pt_a_bev, pt_c_bev
+
+
+
+
 def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
     """symmetrize mesh around origin in any direction"""
 
