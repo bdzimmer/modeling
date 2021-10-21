@@ -11,6 +11,7 @@ import math
 from typing import Any, Dict, Optional
 
 import bpy
+from bpy import types as btypes
 
 from modeling import blender, materials
 
@@ -141,55 +142,12 @@ def add_model(
         mat = model_config.get(ModelKeys.MATERIAL)
 
         if mat is not None:
-
-            instance_name = mat.get(MaterialKeys.INSTANCE)
-            mat_python = mat.get(MaterialKeys.PYTHON)
-
-            if instance_name is not None:
-                # instance another material
-
-                mat_copy = bpy.data.materials.get(instance_name)
-                if mat_copy is not None:
-                    material = mat_copy
-                    # bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+            material = add_material(mat, obj, model_config)
+            if material is not None:
+                if obj.data.materials:
+                    obj.data.materials[0] = material
                 else:
-                    print(f'material {instance_name} not found to instance')
-
-            elif mat_python is not None:
-                # load a material from a python function
-
-                blender.select(obj)
-
-                material = materials.material_python(
-                    name=mat[MaterialKeys.NAME],
-                    obj=obj,
-                    func_desc=mat_python[MaterialKeys.PYTHON_FUNC],
-                    paths=mat_python[MaterialKeys.PYTHON_PATHS]
-                )
-
-            else:
-                # create a new material for the object
-
-                material = bpy.data.materials.new(name=name)
-                material.use_nodes = True
-
-                bsdf = material.node_tree.nodes['Principled BSDF']
-
-                color = model_config.get(ModelKeys.COLOR)
-                if color is not None:
-                    bsdf.inputs['Base Color'].default_value = color
-
-                diffuse = mat.get('diffuse')
-                if diffuse is not None:
-                    bsdf.inputs['Base Color'].default_value = diffuse
-                emission = mat.get('emission')
-                if emission is not None:
-                    bsdf.inputs['Emission'].default_value = emission
-
-            if obj.data.materials:
-                obj.data.materials[0] = material
-            else:
-                obj.data.materials.append(material)
+                    obj.data.materials.append(material)
 
         # additional properties
         props = model_config.get(ModelKeys.PROPS)
@@ -207,6 +165,59 @@ def add_model(
         add_model(child, obj)
 
     return obj
+
+
+def add_material(
+        mat: Dict,
+        obj: btypes.Object,
+        model_config: Optional[Dict]) -> Optional[btypes.Material]:
+
+    instance_name = mat.get(MaterialKeys.INSTANCE)
+    mat_python = mat.get(MaterialKeys.PYTHON)
+
+    if instance_name is not None:
+        # instance another material
+
+        mat_copy = bpy.data.materials.get(instance_name)
+        if mat_copy is not None:
+            material = mat_copy
+            # bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+        else:
+            print(f'material {instance_name} not found to instance')
+            return None
+
+    elif mat_python is not None:
+        # load a material from a python function
+
+        blender.select(obj)
+
+        material = materials.material_python(
+            name=mat[MaterialKeys.NAME],
+            obj=obj,
+            func_desc=mat_python[MaterialKeys.PYTHON_FUNC],
+            paths=mat_python[MaterialKeys.PYTHON_PATHS]
+        )
+
+    else:
+        # create a new material for the object
+
+        material = bpy.data.materials.new(name=obj.name)
+        material.use_nodes = True
+
+        bsdf = material.node_tree.nodes['Principled BSDF']
+
+        color = model_config.get(ModelKeys.COLOR)
+        if color is not None:
+            bsdf.inputs['Base Color'].default_value = color
+
+        diffuse = mat.get('diffuse')
+        if diffuse is not None:
+            bsdf.inputs['Base Color'].default_value = diffuse
+        emission = mat.get('emission')
+        if emission is not None:
+            bsdf.inputs['Emission'].default_value = emission
+
+    return material
 
 
 def set_props(
