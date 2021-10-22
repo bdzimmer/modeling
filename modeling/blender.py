@@ -303,7 +303,8 @@ def point_at(
 def configure_cycles(
         scene: btypes.Scene,
         samples: int,
-        preview_samples: int) -> None:
+        preview_samples: int,
+        gpu: bool) -> None:
     """set commonly used settings for cycles"""
 
     scene.render.engine = "CYCLES"
@@ -313,6 +314,9 @@ def configure_cycles(
 
     scene.cycles.samples = samples
     scene.cycles.preview_samples = preview_samples
+
+    if gpu:
+        scene.cycles.device = 'GPU'
 
 
 def render_animation(

@@ -25,8 +25,8 @@ from modeling import blender, scene as msc, materials as ms
 
 DO_RENDER = True
 
-CYCLES_RENDER_SAMPLES = 8
-CYCLES_PREVIEW_SAMPLES = 8
+CYCLES_RENDER_SAMPLES = 128
+CYCLES_PREVIEW_SAMPLES = 32
 
 LIGHT_SUN = 'sun'
 
@@ -41,6 +41,7 @@ LINE_THICKNESS_KEY = 'line_thickness'
 ORTHO_SCALE_KEY = 'ortho_scale'
 RENDER_EEVEE_USE_BLOOM_KEY = 'render_eevee_use_bloom'
 RENDER_USE_EEVEE_KEY = 'render_use_eevee'
+CYCLES_GPU_KEY = 'cycles_gpu'
 ANIMATION_USE_EEVEE_KEY = 'animation_use_eevee'
 RENDER_RESOLUTION_KEY = 'render_resolution'
 ROOT_OFFSET_KEY = 'root_offset'
@@ -93,6 +94,7 @@ def main(args):
     animation_use_eevee = config_render.get(ANIMATION_USE_EEVEE_KEY, False)
     render_use_eevee = config_render.get(RENDER_USE_EEVEE_KEY, False)
     render_eevee_use_bloom = config_render.get(RENDER_EEVEE_USE_BLOOM_KEY, False)
+    cycles_gpu = config_render.get(CYCLES_GPU_KEY, False)
 
     ortho_scale = config_render.get(ORTHO_SCALE_KEY, 1.1)
     line_thickness = config_render.get(LINE_THICKNESS_KEY, 1.0)
@@ -111,6 +113,21 @@ def main(args):
 
     blender.delete_all_objects()
     blender.reset_scene()
+
+    # ~~~~ create materials
+
+    materials = config.get('materials')
+    if materials is not None:
+        for material in materials:
+            msc.add_model({
+                'name': 'MATERIAL PREVIEW - ' + material.get(msc.MaterialKeys.NAME),
+                'filename': 'models/sphere.obj',
+                'auto_smooth_angle': 30.0,
+                'material': material,
+                'props': {'blender:subsurface': {
+                    'levels': 2, 'render_levels': 4, 'use_adaptive_subdivision': False}},
+                'hide': True
+            }, None)
 
     # ~~~~ load OBJ files
 
@@ -182,7 +199,8 @@ def main(args):
     blender.configure_cycles(
         scene,
         samples=CYCLES_RENDER_SAMPLES,
-        preview_samples=CYCLES_PREVIEW_SAMPLES)
+        preview_samples=CYCLES_PREVIEW_SAMPLES,
+        gpu=cycles_gpu)
     scene.eevee.use_bloom = render_eevee_use_bloom
 
     scene.render.resolution_x = render_resolution[0]
