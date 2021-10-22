@@ -43,6 +43,9 @@ class ModelKeys:
 
 class PropsKeys:
     """keys for properties"""
+
+    BLENDER_TRIS_TO_QUADS = 'blender:tris_to_quads'
+
     BLENDER_WIREFRAME = 'blender:wireframe'
     BLENDER_WIREFRAME_THICKNESS = 'thickness'
     BLENDER_WIREFRAME_USE_EVEN_OFFSET = 'use_even_offset'
@@ -245,6 +248,12 @@ def set_props(
 
         obj.select_set(False)
 
+    if props.get(PropsKeys.BLENDER_TRIS_TO_QUADS, False):
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.tris_convert_to_quads()
+        bpy.ops.object.editmode_toggle()
+
     wireframe = props.get(PropsKeys.BLENDER_WIREFRAME)
     if wireframe is not None:
         # required to add modifiers
@@ -252,7 +261,8 @@ def set_props(
         bpy.ops.object.modifier_add(type='WIREFRAME')
         obj.modifiers['Wireframe'].thickness = wireframe.get(PropsKeys.BLENDER_WIREFRAME_THICKNESS, 0.02)
         obj.modifiers['Wireframe'].use_even_offset = wireframe.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
-        # TODO: make this optional, or a separate property
+
+        # TODO: remove this functionality from this property
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.object.editmode_toggle()
