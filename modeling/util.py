@@ -412,17 +412,19 @@ def bevel_polygon(pts, bevel_amount, inset_amount):
         for a, b, c in zip(pts_a, pts_b, pts_c)
     ]
 
-    pts_inset = [
-        inset_point(a, b, c, inset_amount)
-        for a, b, c in zip(pts_a, pts_b, pts_c)
-    ]
+    if inset_amount is not None:
+        pts_inset = [
+            inset_point(a, b, c, inset_amount)
+            for a, b, c in zip(pts_a, pts_b, pts_c)
+        ]
+        groups = [
+            (a, b, c)
+            for (a, c), b in zip(pts_bev, pts_inset)
+        ]
+    else:
+        groups = pts_bev
 
-    triples = [
-        (a, b, c)
-        for (a, c), b in zip(pts_bev, pts_inset)
-    ]
-
-    return np.array([y for x in triples for y in x])
+    return np.array([y for x in groups for y in x])
 
 
 def bevel_point(pt_a, pt_b, pt_c, amount):
