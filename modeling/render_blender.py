@@ -11,6 +11,7 @@ import pickle
 import os
 import json
 import sys
+from typing import Optional
 
 import bpy
 import bpy.types as btypes
@@ -108,6 +109,11 @@ def main(args):
     world_config = config_render.get(WORLD_KEY, {})
 
     root_obj_loc = (-center[0], -center[1], -center[2])
+
+    # ~~~~ set some blender defaults
+
+    view_space: btypes.SpaceView3D = find_space('VIEW_3D')
+    view_space.shading.show_cavity = True
 
     # ~~~~ clear scene
 
@@ -376,6 +382,19 @@ def render(output_filename: str) -> None:
     bpy.ops.render.render()
     bpy.data.images["Render Result"].save_render(filepath=output_filename)
     print('done')
+
+
+def find_space(space_type: str) -> Optional[btypes.Space]:
+    """find the first space of a given type"""
+    # see here for a list of types:
+    # https://docs.blender.org/api/current/bpy.types.Space.html#bpy.types.Space
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == space_type:
+                for space in area.spaces:
+                    if space.type == space_type:
+                        return space
+    return None
 
 
 main(blender.find_args(sys.argv))
