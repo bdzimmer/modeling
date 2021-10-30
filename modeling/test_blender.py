@@ -35,9 +35,11 @@ def test_configure_cycles():
 
     scene = Mock()
 
-    blender.configure_cycles(scene, 16, 32)
+    blender.configure_cycles(scene, 16, 32, True)
 
+    # not the best test but whatever
     assert scene.render.engine == 'CYCLES'
     assert scene.cycles.feature_set == 'EXPERIMENTAL'
     assert scene.cycles.samples == 16
     assert scene.cycles.preview_samples == 32
+    assert scene.cycles.device == 'GPU'
