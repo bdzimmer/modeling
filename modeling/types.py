@@ -24,3 +24,15 @@ Mesh = Tuple[Verts, Faces]
 
 # a new mesh with indices of new vertices and new faces
 MeshExtended = Tuple[Mesh, List[int], List[int]]
+
+
+# some shorthand for numpy array creation
+
+def vec(*xs) -> np.ndarray:
+    """shorthand for numpy array creation"""
+    return np.array(xs)
+
+
+def vec3(x, y, z) -> Vec3:
+    """shorthand for a specific sized numpy array"""
+    return np.array([x, y, z])

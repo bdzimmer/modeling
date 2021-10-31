@@ -2,6 +2,6 @@
 
 export PYTHONPATH="../blender_autocomplete/2.92"
 
-pytest -s --tb=short --cov-report html:htmlcov_tests --cov=modeling modeling
+pytest -s --tb=short --cov-report term-missing --cov-report html:htmlcov_tests --cov=modeling modeling
 
-xdg-open htmlcov_tests/index.html &
+# xdg-open htmlcov_tests/index.html &
