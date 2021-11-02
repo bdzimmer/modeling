@@ -64,6 +64,8 @@ class PropsKeys:
     BLENDER_SUBSURFACE_LEVELS = 'levels'
     BLENDER_SUBSURFACE_RENDER_LEVELS = 'render_levels'
     BLENDER_SUBSURFACE_USE_ADAPTIVE_SUBDIVISION = 'use_adaptive_subdivision'
+    BLENDER_BEVEL = 'blender:bevel'
+    BLENDER_BEVEL_WIDTH = 'width'
 
 
 class TransformationKeys:
@@ -292,6 +294,17 @@ def set_props(
             render_levels=subsurf[PropsKeys.BLENDER_SUBSURFACE_RENDER_LEVELS],
             use_adaptive_subdivision=subsurf[PropsKeys.BLENDER_SUBSURFACE_USE_ADAPTIVE_SUBDIVISION]
         )
+
+    bevel = props.get(PropsKeys.BLENDER_BEVEL)
+    if bevel is not None:
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_add(type='BEVEL')
+
+        # TODO: write this in a better way
+        obj.modifiers['Bevel'].width = bevel.get(PropsKeys.BLENDER_BEVEL_WIDTH)
+        # obj.modifiers['Wireframe'].use_even_offset = wireframe.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
+
+
 
 
 def set_transformation(
