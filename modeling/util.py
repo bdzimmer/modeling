@@ -449,8 +449,6 @@ def bevel_point(pt_a, pt_b, pt_c, amount):
     return pt_a_bev, pt_c_bev
 
 
-
-
 def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
     """symmetrize mesh around origin in any direction"""
 
@@ -479,3 +477,8 @@ def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
     print('after process:', tm_mesh_whole.vertices.shape, tm_mesh_whole.faces.shape)
 
     return tm_mesh_whole.vertices, tm_mesh_whole.faces
+
+
+def vapply(mesh: Mesh, fn, **kwargs) -> Mesh:
+    """apply a function to vertices of a mesh"""
+    return fn(mesh[0], **kwargs), mesh[1]

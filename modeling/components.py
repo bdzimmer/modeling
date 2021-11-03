@@ -547,11 +547,5 @@ def point_mesh(point: Point3) -> Mesh:
     mesh = (verts, faces)
     return mesh
 
-
-def vapply(mesh: Mesh, fn, **kwargs) -> Mesh:
-    """apply a function to vertices of a mesh"""
-    return fn(mesh[0], **kwargs), mesh[1]
-
-
 # TODO: square plate with chamfered edges
 # TODO: randomly generated plates and greebles
