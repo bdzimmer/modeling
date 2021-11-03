@@ -314,7 +314,7 @@ def circular_plating_mesh(
     plates = []
     for x_val in range(num_plates):
         angle = x_val * angle_plate - 0.5 * angle_gap
-        plates.append(util.transform(plate, util.rotation_y(angle)))
+        plates.append(util.transform_mesh(plate, util.rotation_y(angle)))
     return util.concat(plates)
 
 

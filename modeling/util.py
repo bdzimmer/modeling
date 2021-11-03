@@ -75,20 +75,21 @@ def rotation_z(angle):
     return trimesh.transformations.rotation_matrix(angle, Z_HAT)
 
 
-# TODO: still not clear on whether the copy() calls are required
-
-def translate(
-        mesh: Mesh,
-        trans: Vec3) -> Mesh:
+def translate_mesh(mesh: Mesh, trans: Vec3) -> Mesh:
     """translate a mesh"""
     return mesh[0] + trans, mesh[1]
 
 
-def rotate(mesh: Mesh, rot_mat: np.ndarray) -> Mesh:
-    """rotate verts"""
+def rotate_mesh(mesh: Mesh, rot_mat: np.ndarray) -> Mesh:
+    """rotate a mesh"""
     verts, faces = mesh
-    verts = np.transpose(np.dot(rot_mat, np.transpose(verts)))
+    verts = rotate_verts(verts, rot_mat)
     return verts, faces
+
+
+def scale_mesh(mesh: Mesh, amount: Vec3) -> Mesh:
+    """scale a mesh"""
+    return scale(mesh[0], amount), mesh[1]
 
 
 def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
@@ -96,7 +97,7 @@ def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
     return np.transpose(np.dot(rot_mat, np.transpose(verts)))
 
 
-def transform(mesh: Mesh, mat: np.ndarray) -> Mesh:
+def transform_mesh(mesh: Mesh, mat: np.ndarray) -> Mesh:
     """transform mesh"""
     verts, faces = mesh
 
@@ -118,14 +119,14 @@ def spin(mesh, n_dups, offset):
     """repeate meshes in a circle"""
     # also sometimes known as "circular array"
     return [
-        transform(mesh, rotation_y(x / n_dups * FULL + offset))
+        transform_mesh(mesh, rotation_y(x / n_dups * FULL + offset))
         for x in range(n_dups)]
 
 
 def spin_frac(mesh, n_dups, offset, frac):
     """repeat meshes in a fraction of a circle, including start and end"""
     return [
-        transform(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
+        transform_mesh(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
         for x in range(n_dups)]
 
 
