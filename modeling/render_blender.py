@@ -130,8 +130,14 @@ def main(args):
                 'filename': 'models/sphere.obj',
                 'auto_smooth_angle': 30.0,
                 'material': material,
-                'props': {'blender:subsurface': {
-                    'levels': 2, 'render_levels': 4, 'use_adaptive_subdivision': False}},
+                'props': [
+                    {
+                        'type': 'blender:subsurface',
+                        'levels': 2,
+                        'render_levels': 4,
+                        'use_adaptive_subdivision': False
+                    }
+                ],
                 'hide': True
             }, None)
 

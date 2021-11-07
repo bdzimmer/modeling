@@ -44,6 +44,8 @@ class ModelKeys:
 class PropsKeys:
     """keys for properties"""
 
+    VALUE = 'value'
+
     BLENDER_TRIS_TO_QUADS = 'blender:tris_to_quads'
 
     BLENDER_WIREFRAME = 'blender:wireframe'
@@ -158,7 +160,8 @@ def add_model(
         props = model_config.get(ModelKeys.PROPS)
 
         if props is not None:
-            set_props(obj, props)
+            for prop in props:
+                set_prop(obj, prop)
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
@@ -225,21 +228,24 @@ def add_material(
     return material
 
 
-def set_props(
+def set_prop(
         obj: bpy.types.Object,
-        props: Dict[str, Any]) -> None:
+        prop_dict: Dict[str, Any]) -> None:
 
-    # materials library
-    materials_library = props.get(PropsKeys.BLENDER_MATERIALS_LIBRARY)
-    if materials_library is not None:
+    """
+    Set a property on an object. This can be various things,
+    modifiers, settings changes, etc."""
 
+    prop_type = prop_dict['type']
+
+    if prop_type == PropsKeys.BLENDER_MATERIALS_LIBRARY:
         # TODO: make this more robust
-        bpy.context.scene.matlib.lib_index = materials_library[PropsKeys.BLENDER_MATERIALS_LIBRARY_LIB_INDEX]
-        bpy.context.scene.matlib.mat_index = materials_library[PropsKeys.BLENDER_MATERIALS_LIBRARY_MAT_INDEX]
+        bpy.context.scene.matlib.lib_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_LIB_INDEX]
+        bpy.context.scene.matlib.mat_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_MAT_INDEX]
         obj.select_set(True)
         bpy.context.scene.matlib.apply(bpy.context)
 
-        if materials_library.get('copy', True):
+        if prop_dict.get('copy', True):
             mat = obj.active_material
             mat_name = obj.name + ' - ' + mat.name
             # mat = mat.copy()
@@ -250,61 +256,54 @@ def set_props(
 
         obj.select_set(False)
 
-    if props.get(PropsKeys.BLENDER_TRIS_TO_QUADS, False):
+    elif prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.object.editmode_toggle()
 
-    wireframe = props.get(PropsKeys.BLENDER_WIREFRAME)
-    if wireframe is not None:
+    elif prop_type == PropsKeys.BLENDER_WIREFRAME:
+
         # required to add modifiers
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.modifier_add(type='WIREFRAME')
-        obj.modifiers['Wireframe'].thickness = wireframe.get(PropsKeys.BLENDER_WIREFRAME_THICKNESS, 0.02)
-        obj.modifiers['Wireframe'].use_even_offset = wireframe.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
+        obj.modifiers['Wireframe'].thickness = prop_dict.get(PropsKeys.BLENDER_WIREFRAME_THICKNESS, 0.02)
+        obj.modifiers['Wireframe'].use_even_offset = prop_dict.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
 
         # TODO: remove this functionality from this property
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.object.editmode_toggle()
 
-    disable_shadows = props.get(PropsKeys.BLENDER_SHADOW_DISABLE, False)
-    if disable_shadows:
+    elif prop_type == PropsKeys.BLENDER_SHADOW_DISABLE:
         obj.cycles_visibility.shadow = False
         obj.active_material.shadow_method = 'NONE'
 
-    emission_strength = props.get(PropsKeys.BLENDER_EMISSION_STRENGTH)
-    if emission_strength is not None:
+    elif prop_type == PropsKeys.BLENDER_EMISSION_STRENGTH:
         mat = obj.active_material
         bsdf = mat.node_tree.nodes['Principled BSDF']
-        bsdf.inputs['Emission Strength'].default_value = emission_strength
+        bsdf.inputs['Emission Strength'].default_value = prop_dict[PropsKeys.VALUE]
 
-    alpha = props.get(PropsKeys.BLENDER_ALPHA)
-    if alpha is not None:
+    elif prop_type == PropsKeys.BLENDER_ALPHA:
         mat = obj.active_material
         bsdf = mat.node_tree.nodes['Principled BSDF']
-        bsdf.inputs['Alpha'].default_value = alpha
+        bsdf.inputs['Alpha'].default_value = prop_dict[PropsKeys.VALUE]
 
-    subsurf = props.get(PropsKeys.BLENDER_SUBSURFACE)
-    if subsurf is not None:
+    elif prop_type == PropsKeys.BLENDER_SUBSURFACE:
         blender.add_subsurface(
             obj,
-            levels=subsurf[PropsKeys.BLENDER_SUBSURFACE_LEVELS],
-            render_levels=subsurf[PropsKeys.BLENDER_SUBSURFACE_RENDER_LEVELS],
-            use_adaptive_subdivision=subsurf[PropsKeys.BLENDER_SUBSURFACE_USE_ADAPTIVE_SUBDIVISION]
+            levels=prop_dict[PropsKeys.BLENDER_SUBSURFACE_LEVELS],
+            render_levels=prop_dict[PropsKeys.BLENDER_SUBSURFACE_RENDER_LEVELS],
+            use_adaptive_subdivision=prop_dict[PropsKeys.BLENDER_SUBSURFACE_USE_ADAPTIVE_SUBDIVISION]
         )
 
-    bevel = props.get(PropsKeys.BLENDER_BEVEL)
-    if bevel is not None:
+    elif prop_type == PropsKeys.BLENDER_BEVEL:
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.modifier_add(type='BEVEL')
 
         # TODO: write this in a better way
-        obj.modifiers['Bevel'].width = bevel.get(PropsKeys.BLENDER_BEVEL_WIDTH)
+        obj.modifiers['Bevel'].width = prop_dict[PropsKeys.BLENDER_BEVEL_WIDTH]
         # obj.modifiers['Wireframe'].use_even_offset = wireframe.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
-
-
 
 
 def set_transformation(
