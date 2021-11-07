@@ -95,6 +95,7 @@ class MaterialKeys:
     PYTHON = 'python'
     PYTHON_FUNC = 'func'
     PYTHON_PATHS = 'paths'
+    UPDATES = 'updates'
 
 
 # TODO: figure out how to control the name of the default collection
@@ -224,6 +225,17 @@ def add_material(
         emission = mat.get('emission')
         if emission is not None:
             bsdf.inputs['Emission'].default_value = emission
+
+    # apply additional updates
+    updates = mat.get(MaterialKeys.UPDATES)
+    if updates is not None:
+        for update in updates:
+            node_name = update['node']
+            node_input_name = update['input']
+            value = update['value']
+            node = material.node_tree.nodes[node_name]
+            node_input = node.inputs[node_input_name]
+            node_input.default_value = value
 
     return material
 
