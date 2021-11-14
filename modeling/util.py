@@ -490,7 +490,7 @@ def fapply(mesh: Mesh, fn, **kwargs) -> Mesh:
     return mesh[0], fn(mesh[1], **kwargs)
 
 
-def remove_bad_faces(faces):
+def remove_bad_faces(faces: np.ndarray) -> np.ndarray:
     """remove degenerate faces"""
     keep = []
     for face in faces:
@@ -498,6 +498,9 @@ def remove_bad_faces(faces):
             keep.append(False)
         else:
             keep.append(True)
+
+    print(np.sum(keep), '/', faces.shape[0], 'good')
+
     return faces[keep, :]
 
 
