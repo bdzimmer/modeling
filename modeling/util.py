@@ -483,3 +483,25 @@ def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
 def vapply(mesh: Mesh, fn, **kwargs) -> Mesh:
     """apply a function to vertices of a mesh"""
     return fn(mesh[0], **kwargs), mesh[1]
+
+
+def fapply(mesh: Mesh, fn, **kwargs) -> Mesh:
+    """apply a function to the faces of a mesh"""
+    return mesh[0], fn(mesh[1], **kwargs)
+
+
+def remove_bad_faces(faces):
+    """remove degenerate faces"""
+    keep = []
+    for face in faces:
+        if len(set(face)) < 3:
+            keep.append(False)
+        else:
+            keep.append(True)
+    return faces[keep, :]
+
+
+def process(mesh: Mesh) -> Mesh:
+    """use trimesh's process"""
+    mesh_tm = trimesh.Trimesh(mesh[0], mesh[1], process=True)
+    return mesh_tm.vertices, mesh_tm.faces

@@ -66,6 +66,8 @@ def surface_revolution(
             faces_list.append(
                 [offset_b + idx_vert_a, offset_a + idx_vert_b, offset_b + idx_vert_b])
 
+    # TODO: some degenerate faces are produced here I think
+
     return np.vstack(points_list), np.vstack(faces_list)
 
 
