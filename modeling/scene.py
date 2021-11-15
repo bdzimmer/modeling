@@ -88,14 +88,15 @@ class KeyframeKeys:
 
 class MaterialKeys:
     """keys for materials"""
+    INSTANCE = 'instance'
+    PYTHON = 'python'
+    MATLIB = 'matlib'
 
     NAME = 'name'
-    COPY = 'copy'  # TODO: rename to something like 'deepcopy' or 'instance'
-    INSTANCE = 'instance'
+    COPY = 'copy'
     COLOR = 'color'
     DIFFUSE = 'diffuse'
     EMISSION = 'emission'
-    PYTHON = 'python'
     PYTHON_FUNC = 'func'
     PYTHON_PATHS = 'paths'
     UPDATES = 'updates'
@@ -213,13 +214,9 @@ def add_material(
     mat_python = mat.get(MaterialKeys.PYTHON)
 
     if instance_name is not None:
-        # instance another material
-
-        mat_copy = bpy.data.materials.get(instance_name)
-        if mat_copy is not None:
-            material = mat_copy
-            # bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
-        else:
+        # instance a material that already exists in the scene
+        material = bpy.data.materials.get(instance_name)
+        if material is None:
             print(f'material {instance_name} not found to instance')
             return None
 
