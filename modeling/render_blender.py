@@ -17,6 +17,7 @@ import bpy
 import bpy.types as btypes
 
 # TODO: there is probably a better way to find the script directory at runtime
+
 CODE_DIRNAME = '/home/ben/code/modeling'
 
 if CODE_DIRNAME not in sys.path:
@@ -143,11 +144,15 @@ def main(args):
 
     # ~~~~ load OBJ files
 
+    msc.PROFILER.tick('all loading')
+
     # for now, just load starting from the first model
     root_obj = msc.add_model(config['models'][0], None)
     if len(config['models']) > 1:
         for model in config['models'][1:]:
             msc.add_model(model, None)
+
+    msc.PROFILER.tock('all loading')
 
     # blender.purge_orphans()
 
@@ -366,6 +371,9 @@ def main(args):
 
     if do_quit:
         blender.quit()
+
+    msc.PROFILER.summary()
+    print('', flush=True)
 
 
 def set_render_outlines(scene: bpy.types.Scene, line_thickness: float) -> None:

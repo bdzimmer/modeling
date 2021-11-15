@@ -13,7 +13,10 @@ from typing import Any, Dict, Optional
 import bpy
 from bpy import types as btypes
 
-from modeling import blender, materials
+from modeling import blender, materials, profiler
+
+
+PROFILER = profiler.Profiler()
 
 
 class ModelKeys:
@@ -111,6 +114,8 @@ def add_model(
 
     name = model_config[ModelKeys.NAME]
 
+    PROFILER.tick('add - load / instance / copy')
+
     model_filename = model_config.get(ModelKeys.FILENAME)
     if model_filename is not None:
         obj = import_obj(model_config[ModelKeys.FILENAME])
@@ -131,25 +136,38 @@ def add_model(
             else:
                 print(f'object {instance_name} not found to instance')
 
+    PROFILER.tock('add - load / instance / copy')
+
+    PROFILER.tick('add - other')
+
     if parent is not None:
+        PROFILER.tick('add - other - parent')
         obj.parent = parent
+        PROFILER.tock('add - other - parent')
 
     transformation = model_config.get(ModelKeys.TRANSFORMATION)
     if transformation is not None:
+        PROFILER.tick('add - other - transformation')
         set_transformation(obj, transformation)
-
-    # enable smooth shading
-    auto_smooth_angle = model_config.get(ModelKeys.AUTO_SMOOTH_ANGLE)
-    if auto_smooth_angle is not None:
-        obj.data.use_auto_smooth = True
-        obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
-        bpy.ops.object.shade_smooth()
+        PROFILER.tock('add - other - transformation')
 
     if obj.data is not None:
+
+        # enable smooth shading
+        auto_smooth_angle = model_config.get(ModelKeys.AUTO_SMOOTH_ANGLE)
+        if auto_smooth_angle is not None:
+            PROFILER.tick('add - other - smooth')
+            obj.data.use_auto_smooth = True
+            obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
+            bpy.ops.object.shade_smooth()
+            PROFILER.tock('add - other - smooth')
 
         mat = model_config.get(ModelKeys.MATERIAL)
 
         if mat is not None:
+
+            PROFILER.tick('add - other - material')
+
             material = add_material(mat, obj, model_config)
             if material is not None:
                 if obj.data.materials:
@@ -157,17 +175,27 @@ def add_model(
                 else:
                     obj.data.materials.append(material)
 
+            PROFILER.tock('add - other - material')
+
         # additional properties
+
         props = model_config.get(ModelKeys.PROPS)
 
         if props is not None:
+            PROFILER.tick('add - other - properties')
             for prop in props:
                 set_prop(obj, prop)
+            PROFILER.tock('add - other - properties')
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
+        PROFILER.tick('add - other - hide')
         obj.hide_viewport = True
         obj.hide_render = True
+        PROFILER.tock('add - other - hide')
+
+    # tock before recurse
+    PROFILER.tock('add - other')
 
     children = model_config.get('children', [])
     for child in children:
@@ -407,6 +435,9 @@ def add_keyframes(
 
 def import_obj(filename) -> bpy.types.Object:
     """import an obj file"""
+
+    PROFILER.tick('obj')
+
     bpy.ops.import_scene.obj(
         filepath=filename,
         use_smooth_groups=False,  # for now
@@ -414,4 +445,7 @@ def import_obj(filename) -> bpy.types.Object:
         axis_forward='Y',
         axis_up='Z')
     obj = bpy.context.selected_objects[0]
+
+    PROFILER.tock('obj')
+
     return obj
