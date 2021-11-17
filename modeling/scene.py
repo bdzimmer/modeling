@@ -55,10 +55,6 @@ class PropsKeys:
     BLENDER_WIREFRAME_THICKNESS = 'thickness'
     BLENDER_WIREFRAME_USE_EVEN_OFFSET = 'use_even_offset'
 
-    BLENDER_MATERIALS_LIBRARY = 'blender:materials_library'
-    BLENDER_MATERIALS_LIBRARY_LIB_INDEX = 'lib_index'
-    BLENDER_MATERIALS_LIBRARY_MAT_INDEX = 'mat_index'
-
     BLENDER_SHADOW_DISABLE = 'blender:shadow_disable'
 
     BLENDER_EMISSION_STRENGTH = 'blender:emission_strength'
@@ -92,13 +88,17 @@ class MaterialKeys:
     PYTHON = 'python'
     MATLIB = 'matlib'
 
+    PYTHON_FUNC = 'func'
+    PYTHON_PATHS = 'paths'
+
+    MATLIB_LIB_INDEX = 'lib_index'
+    MATLIB_MAT_INDEX = 'mat_index'
+
     NAME = 'name'
     COPY = 'copy'
     COLOR = 'color'
     DIFFUSE = 'diffuse'
     EMISSION = 'emission'
-    PYTHON_FUNC = 'func'
-    PYTHON_PATHS = 'paths'
     UPDATES = 'updates'
 
 
@@ -212,6 +212,7 @@ def add_material(
 
     instance_name = mat.get(MaterialKeys.INSTANCE)
     mat_python = mat.get(MaterialKeys.PYTHON)
+    matlib_dict = mat.get(MaterialKeys.MATLIB)
 
     if instance_name is not None:
         # instance a material that already exists in the scene
@@ -219,6 +220,30 @@ def add_material(
         if material is None:
             print(f'material {instance_name} not found to instance')
             return None
+
+    elif matlib_dict is not None:
+
+        # TODO: make this more robust
+        # TODO: is a sub dictionary like this what makes the most sense?
+
+        bpy.context.scene.matlib.lib_index = matlib_dict[MaterialKeys.MATLIB_LIB_INDEX]
+        bpy.context.scene.matlib.mat_index = matlib_dict[MaterialKeys.MATLIB_MAT_INDEX]
+
+        obj.select_set(True)
+        bpy.context.scene.matlib.apply(bpy.context)
+
+        material = obj.active_material
+
+        # optionally duplicate instead of just instance
+        # this defaults to true, since usually this is what we want
+        # for materials library materials
+        if matlib_dict.get('copy', True):
+            mat_name = obj.name + ' - ' + material.name  # derive unique name
+            material = material.make_local()  # .copy() will share animation keyframes
+            material.name = mat_name
+            obj.active_material = material
+
+        obj.select_set(False)
 
     elif mat_python is not None:
         # load a material from a python function
@@ -275,25 +300,25 @@ def set_prop(
 
     prop_type = prop_dict['type']
 
-    if prop_type == PropsKeys.BLENDER_MATERIALS_LIBRARY:
-        # TODO: make this more robust
-        bpy.context.scene.matlib.lib_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_LIB_INDEX]
-        bpy.context.scene.matlib.mat_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_MAT_INDEX]
-        obj.select_set(True)
-        bpy.context.scene.matlib.apply(bpy.context)
+    # if prop_type == PropsKeys.BLENDER_MATERIALS_LIBRARY:
+    #     # TODO: make this more robust
+    #     bpy.context.scene.matlib.lib_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_LIB_INDEX]
+    #     bpy.context.scene.matlib.mat_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_MAT_INDEX]
+    #     obj.select_set(True)
+    #     bpy.context.scene.matlib.apply(bpy.context)
+    #
+    #     if prop_dict.get('copy', True):
+    #         mat = obj.active_material
+    #         mat_name = obj.name + ' - ' + mat.name
+    #         # mat = mat.copy()
+    #         mat = mat.make_local()  # .copy() will share animation keyframes
+    #         mat.name = mat_name
+    #
+    #         obj.active_material = mat
+    #
+    #     obj.select_set(False)
 
-        if prop_dict.get('copy', True):
-            mat = obj.active_material
-            mat_name = obj.name + ' - ' + mat.name
-            # mat = mat.copy()
-            mat = mat.make_local()  # .copy() will share animation keyframes
-            mat.name = mat_name
-
-            obj.active_material = mat
-
-        obj.select_set(False)
-
-    elif prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
+    if prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.tris_convert_to_quads()

@@ -12,6 +12,8 @@ from typing import Any, Union, Tuple, List, Callable
 import trimesh
 import trimesh.transformations
 import trimesh.intersections
+import trimesh.boolean
+
 from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
