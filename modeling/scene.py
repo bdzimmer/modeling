@@ -210,16 +210,23 @@ def add_material(
         obj: btypes.Object,
         model_config: Optional[Dict]) -> Optional[btypes.Material]:
 
-    instance_name = mat.get(MaterialKeys.INSTANCE)
+    instance_dict = mat.get(MaterialKeys.INSTANCE)
     mat_python = mat.get(MaterialKeys.PYTHON)
     matlib_dict = mat.get(MaterialKeys.MATLIB)
 
-    if instance_name is not None:
+    if instance_dict is not None:
         # instance a material that already exists in the scene
+
+        instance_name = instance_dict['name']
         material = bpy.data.materials.get(instance_name)
         if material is None:
             print(f'material {instance_name} not found to instance')
             return None
+
+        copy_name = instance_dict.get('copy')
+        if copy_name is not None:
+            material = material.make_local()  # .copy() will share animation keyframes
+            material.name = copy_name
 
     elif matlib_dict is not None:
 
@@ -241,7 +248,7 @@ def add_material(
             mat_name = obj.name + ' - ' + material.name  # derive unique name
             material = material.make_local()  # .copy() will share animation keyframes
             material.name = mat_name
-            obj.active_material = material
+            obj.active_material = material  # this might not be necessary
 
         obj.select_set(False)
 
@@ -281,6 +288,7 @@ def add_material(
     if updates is not None:
         for update in updates:
             node_name = update['node']
+            # TODO: node outputs too
             node_input_name = update['input']
             value = update['value']
             node = material.node_tree.nodes[node_name]
