@@ -223,10 +223,13 @@ def add_material(
             print(f'material {instance_name} not found to instance')
             return None
 
-        copy_name = instance_dict.get('copy')
-        if copy_name is not None:
-            material = material.make_local()  # .copy() will share animation keyframes
-            material.name = copy_name
+        if instance_dict.get('copy', False):
+            print('copying material')
+            # not sure, but it appears that copy is required here
+            # I think make local is required too
+            material = material.copy()
+            material = material.make_local()
+            material.name = mat[MaterialKeys.NAME]
 
     elif matlib_dict is not None:
 
@@ -287,13 +290,24 @@ def add_material(
     updates = mat.get(MaterialKeys.UPDATES)
     if updates is not None:
         for update in updates:
-            node_name = update['node']
-            # TODO: node outputs too
-            node_input_name = update['input']
+
             value = update['value']
-            node = material.node_tree.nodes[node_name]
-            node_input = node.inputs[node_input_name]
-            node_input.default_value = value
+            node_name = update['node']
+            node = material.node_tree.nodes.get(node_name)
+            if node is None:
+                for node_cur in material.node_tree.nodes:
+                    if node_cur.label == node_name:
+                        node = node_cur
+                        break
+
+            node_input_name = update.get('input')
+            node_output_name = update.get('output')
+            if node_input_name is not None:
+                node_input = node.inputs[node_input_name]
+                node_input.default_value = value
+            elif node_output_name is not None:
+                node_output = node.outputs[node_output_name]
+                node_output.default_value = value
 
     return material
 
