@@ -125,22 +125,24 @@ def main(args):
 
     materials = config.get('materials')
     if materials is not None:
-        for material in materials:
-            msc.add_model({
-                'name': 'MATERIAL PREVIEW - ' + material.get(msc.MaterialKeys.NAME),
-                'filename': 'models/sphere.obj',
-                'auto_smooth_angle': 30.0,
-                'material': material,
-                'props': [
-                    {
-                        'type': 'blender:subsurface',
-                        'levels': 2,
-                        'render_levels': 4,
-                        'use_adaptive_subdivision': False
-                    }
-                ],
-                'hide': True
-            }, None)
+        if materials:
+            parent = msc.add_model({'name': 'MATERIAL PREVIEWS', 'hide': True}, None)
+            for material in materials:
+                msc.add_model({
+                    'name': 'MATERIAL PREVIEW - ' + material.get(msc.MaterialKeys.NAME),
+                    'filename': 'models/sphere.obj',
+                    'auto_smooth_angle': 30.0,
+                    'material': material,
+                    'props': [
+                        {
+                            'type': 'blender:subsurface',
+                            'levels': 2,
+                            'render_levels': 4,
+                            'use_adaptive_subdivision': False
+                        }
+                    ],
+                    'hide': True
+                }, parent)
 
     # ~~~~ load OBJ files
 
