@@ -7,7 +7,7 @@ Common functions for nicer dealings with mesh objects.
 # Copyright (c) 2019 Ben Zimmer. All rights reserved.
 
 import math
-from typing import Any, Union, Tuple, List, Callable
+from typing import Any, Union, Tuple, List, Callable, Optional
 
 import trimesh
 import trimesh.transformations
@@ -18,8 +18,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
 
+from symbols import transforms
 from modeling import view
-from modeling.types import Mesh, Vec3, Verts
+from modeling.types import Mesh, Vec3, Verts, Verts2D
+
 
 X_HAT = np.array([1.0, 0.0, 0.0])
 Y_HAT = np.array([0.0, 1.0, 0.0])
@@ -28,8 +30,8 @@ Z_HAT = np.array([0.0, 0.0, 1.0])
 X_HAT_NEG = np.array([-1.0, 1.0, 1.0])
 Z_HAT_NEG = np.array([1.0, 1.0, -1.0])
 
-FULL = 2.0 * np.pi
-TAU = FULL
+TAU = 2.0 * np.pi
+FULL = TAU
 
 
 def tm(verts, faces):  # pylint: disable=invalid-name
@@ -177,10 +179,15 @@ def elongate(
     amount = np.expand_dims(amount, axis=0)
     return pts + np.sign(pts) * amount
 
-# ~~~~ ~~~~ ~~~~ ~~~~
+# ~~~~ 2D primitives ~~~~ ~~~~ ~~~~
 
 
-def rect_2d(width, height):
+def ngon(n: int, start: float) -> Verts2D:
+    """le sigh"""
+    return np.array(transforms.points_around_circle(n, start, 1))
+
+
+def rect_2d(width, height) -> Verts2D:
     """rectangular rib in xy"""
 
     width_half = width * 0.5
@@ -194,7 +201,7 @@ def rect_2d(width, height):
     ])
 
 
-def rect_bevel_2d(width, height, bevel):
+def rect_bevel_2d(width, height, bevel) -> Verts2D:
     """get a rib, parameterized by the height and width of the opening"""
 
     # TODO: there's a generic bevel somewhere in here
@@ -214,6 +221,8 @@ def rect_bevel_2d(width, height, bevel):
         (-width_half, -height_half + bevel),
         (-width_half + bevel, -height_half)
     ])
+
+# ~~~~ ~~~~ ~~~~ ~~~~
 
 
 def reverse_mapping(xs):
@@ -403,7 +412,7 @@ def inset_point(pt_a, pt_b, pt_c, amount):
     return res
 
 
-def bevel_polygon(pts, bevel_amount, inset_amount):
+def bevel_polygon(pts: Verts, bevel_amount: float, inset_amount: Optional[float]) -> Verts:
     """bevel a polygon"""
 
     pts_a = [pts[-1]] + list(pts[:-1])

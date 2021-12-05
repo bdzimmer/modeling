@@ -420,7 +420,8 @@ def set_transformation(
                 # H -> Z
                 # P -> X
                 # R -> Y
-                obj.rotation_mode = 'ZXY'
+                # obj.rotation_mode = 'ZXY'
+                obj.rotation_mode = 'YXZ'
                 obj.rotation_euler = (
                     math.radians(rot[1]),  # X == (ZXY)[1]
                     math.radians(rot[2]),  # Y == (ZXY)[2]
