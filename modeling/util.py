@@ -28,6 +28,7 @@ Y_HAT = np.array([0.0, 1.0, 0.0])
 Z_HAT = np.array([0.0, 0.0, 1.0])
 
 X_HAT_NEG = np.array([-1.0, 1.0, 1.0])
+Y_HAT_NEG = np.array([1.0, -1.0, 1.0])
 Z_HAT_NEG = np.array([1.0, 1.0, -1.0])
 
 TAU = 2.0 * np.pi
@@ -307,6 +308,13 @@ def mirror_x(mesh: Mesh) -> Mesh:
     """mirror mesh in x dimension (across y axis)"""
     return (
         mesh[0] * np.array([X_HAT_NEG]),
+        mesh[1][:, [2, 1, 0]]
+    )
+
+def mirror_y(mesh: Mesh) -> Mesh:
+    """mirror mesh in y dimension"""
+    return (
+        mesh[0] * np.array([Y_HAT_NEG]),
         mesh[1][:, [2, 1, 0]]
     )
 
