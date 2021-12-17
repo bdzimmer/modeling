@@ -102,6 +102,11 @@ def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
     return np.transpose(np.dot(rot_mat, np.transpose(verts)))
 
 
+def rotate_vec(vec: Vec3, rot_mat: np.ndarray) -> np.ndarray:
+    """rotate a single vector"""
+    return np.transpose(np.dot(rot_mat, np.transpose(np.array([vec]))))[0, :]
+
+
 def transform_mesh(mesh: Mesh, mat: np.ndarray) -> Mesh:
     """transform mesh"""
     verts, faces = mesh
