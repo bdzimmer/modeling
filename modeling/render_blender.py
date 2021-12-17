@@ -116,6 +116,9 @@ def main(args):
     view_space: btypes.SpaceView3D = find_space('VIEW_3D')
     view_space.shading.show_cavity = True
 
+    bpy.context.scene.transform_orientation_slots[1].type = 'LOCAL'
+    view_space.show_gizmo_object_translate = True
+
     # ~~~~ clear scene
 
     blender.delete_all_objects()
