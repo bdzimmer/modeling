@@ -140,6 +140,13 @@ def spin_frac(mesh, n_dups, offset, frac):
         for x in range(n_dups)]
 
 
+def attach_x(yz: np.ndarray, x: float) -> np.ndarray:
+    """add a z dimension to a set of 2D points"""
+    xs = np.ones(yz.shape[0]) * x
+    xs = np.expand_dims(xs, axis=1)
+    return np.concatenate([xs, yz], axis=1)
+
+
 def attach_z(xy: np.ndarray, z: float) -> np.ndarray:
     """add a z dimension to a set of 2D points"""
     zs = np.ones(xy.shape[0]) * z
