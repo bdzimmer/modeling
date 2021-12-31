@@ -94,6 +94,9 @@ class MaterialKeys:
     MATLIB_LIB_INDEX = 'lib_index'
     MATLIB_MAT_INDEX = 'mat_index'
 
+    MATLIB_LIB_NAME = 'lib_name'
+    MATLIB_MAT_NAME = 'mat_name'
+
     NAME = 'name'
     COPY = 'copy'
     COLOR = 'color'
@@ -135,7 +138,7 @@ def add_model(
                 obj = bpy.data.objects.new(name, obj_copy.data)
                 bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
             else:
-                print(f'object {instance_name} not found to instance')
+                print(f'object `{instance_name}` not found to instance')
 
     PROFILER.tock('add - load / instance / copy')
 
@@ -220,7 +223,7 @@ def add_material(
         instance_name = instance_dict['name']
         material = bpy.data.materials.get(instance_name)
         if material is None:
-            print(f'material {instance_name} not found to instance')
+            print(f'material `{instance_name}` not found to instance')
             return None
 
         if instance_dict.get('copy', False):
@@ -236,8 +239,14 @@ def add_material(
         # TODO: make this more robust
         # TODO: is a sub dictionary like this what makes the most sense?
 
-        bpy.context.scene.matlib.lib_index = matlib_dict[MaterialKeys.MATLIB_LIB_INDEX]
-        bpy.context.scene.matlib.mat_index = matlib_dict[MaterialKeys.MATLIB_MAT_INDEX]
+        if MaterialKeys.MATLIB_LIB_INDEX in matlib_dict:
+            bpy.context.scene.matlib.lib_index = matlib_dict[MaterialKeys.MATLIB_LIB_INDEX]
+            bpy.context.scene.matlib.mat_index = matlib_dict[MaterialKeys.MATLIB_MAT_INDEX]
+        else:
+            blender.matlib_select(
+                matlib_dict[MaterialKeys.MATLIB_LIB_NAME],
+                matlib_dict[MaterialKeys.MATLIB_MAT_NAME]
+            )
 
         obj.select_set(True)
         bpy.context.scene.matlib.apply(bpy.context)
@@ -247,7 +256,7 @@ def add_material(
         # optionally duplicate instead of just instance
         # this defaults to true, since usually this is what we want
         # for materials library materials
-        if matlib_dict.get('copy', True):
+        if matlib_dict.get(MaterialKeys.COPY, True):
             mat_name = obj.name + ' - ' + material.name  # derive unique name
             material = material.make_local()  # .copy() will share animation keyframes
             material.name = mat_name

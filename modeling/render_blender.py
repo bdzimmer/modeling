@@ -24,6 +24,7 @@ if CODE_DIRNAME not in sys.path:
     sys.path.append(CODE_DIRNAME)
 
 from modeling import blender, scene as msc, materials as ms
+from modeling.scene import MaterialKeys as Mk
 
 DO_RENDER = True
 
@@ -131,8 +132,19 @@ def main(args):
         if materials:
             parent = msc.add_model({'name': 'MATERIAL PREVIEWS', 'hide': True}, None)
             for material in materials:
+
+                # if there is no name field, it's expected that we
+                # are loading the material by name from the materials library
+                if Mk.NAME in material:
+                    material_name = material[Mk.NAME]
+                else:
+                    material_name = (
+                        material[Mk.MATLIB][Mk.MATLIB_LIB_NAME] + ' / ' +
+                        material[Mk.MATLIB][Mk.MATLIB_MAT_NAME]
+                    )
+
                 msc.add_model({
-                    'name': 'MATERIAL PREVIEW - ' + material.get(msc.MaterialKeys.NAME),
+                    'name': 'MATERIAL PREVIEW - ' + material_name,
                     'filename': 'models/sphere.obj',
                     'auto_smooth_angle': 30.0,
                     'material': material,
