@@ -243,7 +243,7 @@ def add_material(
             bpy.context.scene.matlib.lib_index = matlib_dict[MaterialKeys.MATLIB_LIB_INDEX]
             bpy.context.scene.matlib.mat_index = matlib_dict[MaterialKeys.MATLIB_MAT_INDEX]
         else:
-            blender.matlib_select(
+            materials.matlib_select(
                 matlib_dict[MaterialKeys.MATLIB_LIB_NAME],
                 matlib_dict[MaterialKeys.MATLIB_MAT_NAME]
             )

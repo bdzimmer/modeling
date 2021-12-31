@@ -11,6 +11,7 @@ import importlib
 import sys
 from typing import List, Tuple, Any, Union
 
+import bpy
 import bpy.types as btypes
 
 from modeling import blender
@@ -64,3 +65,23 @@ def set_input(node: btypes.Node, name: Union[str, int], value: Any):
 def set_output(node: btypes.Node, name: str, value: Any):
     """set default value of input for a node"""
     node.outputs[name].default_value = value
+
+
+def matlib_select(lib_name: str, mat_name: str) -> None:
+    """select a materials library material by name"""
+
+    matlib = bpy.context.scene.matlib
+
+    for idx, library in enumerate(matlib.libraries):
+        if library.name == lib_name + '.blend':
+            matlib.lib_index = idx
+            break
+    else:
+        print(f'library {lib_name} not found')
+
+    for idx, material in enumerate(matlib.materials):
+        if material.name == mat_name:
+            matlib.mat_index = idx
+            break
+    else:
+        print(f'material {mat_name} not found')

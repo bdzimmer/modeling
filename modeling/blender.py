@@ -340,22 +340,3 @@ def render(output_filename: str) -> None:
     bpy.ops.render.render()
     bpy.data.images["Render Result"].save_render(filepath=output_filename)
 
-
-def matlib_select(lib_name: str, mat_name: str) -> None:
-    """select a materials library material by name"""
-
-    matlib = bpy.context.scene.matlib
-
-    for idx, library in enumerate(matlib.libraries):
-        if library.name == lib_name + '.blend':
-            matlib.lib_index = idx
-            break
-    else:
-        print(f'library {lib_name} not found')
-
-    for idx, material in enumerate(matlib.materials):
-        if material.name == mat_name:
-            matlib.mat_index = idx
-            break
-    else:
-        print(f'material {mat_name} not found')
