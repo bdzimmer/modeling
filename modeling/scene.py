@@ -369,7 +369,8 @@ def set_prop(
         bpy.ops.object.editmode_toggle()
 
     elif prop_type == PropsKeys.BLENDER_SHADOW_DISABLE:
-        obj.cycles_visibility.shadow = False
+        # obj.cycles_visibility.shadow = False
+        obj.visible_shadow = False
         obj.active_material.shadow_method = 'NONE'
 
     elif prop_type == PropsKeys.BLENDER_EMISSION_STRENGTH:

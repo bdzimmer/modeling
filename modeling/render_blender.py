@@ -333,13 +333,17 @@ def main(args):
         for config_model in config['models']:
             name = config_model['name']
             obj = blender.get_obj_by_name(name)
-            action = obj.animation_data.action
-            if action is not None:
-                for fcurve in action.fcurves:
-                    for keyframe in fcurve.keyframe_points:
-                        keyframe.interpolation = 'CONSTANT'
+            anim_data = obj.animation_data
+            if anim_data is not None:
+                action = anim_data.action
+                if action is not None:
+                    for fcurve in action.fcurves:
+                        for keyframe in fcurve.keyframe_points:
+                            keyframe.interpolation = 'CONSTANT'
+                else:
+                    print(f'object {name} has no action')
             else:
-                print(f'object {name} has no action')
+                print(f'object {name} has no animation data')
 
         if do_render_animation:
             if animation_use_eevee:
