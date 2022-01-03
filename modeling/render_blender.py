@@ -273,13 +273,17 @@ def main(args):
         for link in links:
             blender.add_link(scene.world, *link)
 
-        blender.arrange_nodes([
-            add_node,
-            tex_env,
-            bright_contrast,
-            background,
-            world_output
-        ])
+        try:
+            blender.arrange_nodes([
+                add_node,
+                tex_env,
+                bright_contrast,
+                background,
+                world_output
+            ])
+        except:
+            # do nothing
+            print('problem while arranging world nodes')
 
         # bpy.context.space_data.shader_type = 'OBJECT'
 
