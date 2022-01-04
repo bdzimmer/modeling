@@ -8,7 +8,7 @@ Tests for blender utilities.
 
 from unittest.mock import Mock
 
-from modeling import blender
+from modeling.blender import util
 
 
 def test_flatten():
@@ -19,15 +19,15 @@ def test_flatten():
     n_c = 'c'
 
     struct = [n_a, n_b, n_c]
-    assert blender.flatten_nodes(struct) == struct
+    assert util.flatten_nodes(struct) == struct
 
     struct = [[n_a, n_b, n_c], n_b, n_c]
     res = [n_a, n_b, n_c, n_b, n_c]
-    assert blender.flatten_nodes(struct) == res
+    assert util.flatten_nodes(struct) == res
 
     struct = [[[n_a, n_b], n_a, n_b], n_a, n_b]
     res = [n_a, n_b, n_a, n_b, n_a, n_b]
-    assert blender.flatten_nodes(struct) == res
+    assert util.flatten_nodes(struct) == res
 
 
 def test_configure_cycles():
@@ -35,7 +35,7 @@ def test_configure_cycles():
 
     scene = Mock()
 
-    blender.configure_cycles(scene, 16, 32, True)
+    util.configure_cycles(scene, 16, 32, True)
 
     # not the best test but whatever
     assert scene.render.engine == 'CYCLES'

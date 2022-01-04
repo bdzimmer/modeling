@@ -13,7 +13,8 @@ from typing import Any, Dict, Optional
 import bpy
 from bpy import types as btypes
 
-from modeling import blender, materials, profiler
+from modeling import profiler
+from modeling.blender import util as butil, materials
 
 
 PROFILER = profiler.Profiler()
@@ -267,7 +268,7 @@ def add_material(
     elif mat_python is not None:
         # load a material from a python function
 
-        blender.select(obj)
+        butil.select(obj)
 
         material = materials.material_python(
             name=mat[MaterialKeys.NAME],
@@ -384,7 +385,7 @@ def set_prop(
         bsdf.inputs['Alpha'].default_value = prop_dict[PropsKeys.VALUE]
 
     elif prop_type == PropsKeys.BLENDER_SUBSURFACE:
-        blender.add_subsurface(
+        butil.add_subsurface(
             obj,
             levels=prop_dict[PropsKeys.BLENDER_SUBSURFACE_LEVELS],
             render_levels=prop_dict[PropsKeys.BLENDER_SUBSURFACE_RENDER_LEVELS],
@@ -416,12 +417,12 @@ def set_transformation(
     rot = transf.get(TransformationKeys.ROTATION)
     if rot is not None:
         if isinstance(rot, dict):
-            point_at_obj = blender.get_obj_by_name(rot['point_at'])
-            blender.point_at(
+            point_at_obj = butil.get_obj_by_name(rot['point_at'])
+            butil.point_at(
                 obj,
                 point_at_obj,
-                blender.TRACK_AXIS[rot.get('track_axis', '-z')],
-                blender.UP_AXIS[rot.get('up_axis', 'y')])
+                butil.TRACK_AXIS[rot.get('track_axis', '-z')],
+                butil.UP_AXIS[rot.get('up_axis', 'y')])
         else:
             if len(rot) == 3:
                 # I think Panda3D's HPR is intrinsic

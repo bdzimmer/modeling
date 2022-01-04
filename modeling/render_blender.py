@@ -23,8 +23,8 @@ CODE_DIRNAME = '/home/ben/code/modeling'
 if CODE_DIRNAME not in sys.path:
     sys.path.append(CODE_DIRNAME)
 
-from modeling import blender, scene as msc, materials as ms
-from modeling.scene import MaterialKeys as Mk
+from modeling.blender import util as butil, scene as msc, materials as ms
+from modeling.blender.scene import MaterialKeys as Mk
 
 DO_RENDER = True
 
@@ -59,7 +59,7 @@ WORLD_KEY = 'world'
 def main(args):
     """main program"""
 
-    blender.disable_splash()
+    butil.disable_splash()
 
     input_filename = args[0]
     output_filename = args[1]
@@ -122,8 +122,8 @@ def main(args):
 
     # ~~~~ clear scene
 
-    blender.delete_all_objects()
-    blender.reset_scene()
+    butil.delete_all_objects()
+    butil.reset_scene()
 
     # ~~~~ create materials
 
@@ -204,7 +204,7 @@ def main(args):
 
     for light_name, light in config['lights'].items():
         if light['type'] == LIGHT_SUN:
-            light_obj = blender.sun(
+            light_obj = butil.sun(
                 name=light_name,
                 loc=(0.0, 0.0, 0.0),
                 rot_euler=(0.0, 0.0, 0.0),
@@ -230,7 +230,7 @@ def main(args):
     scene.render.film_transparent = film_transparent
 
     scene.render.engine = 'CYCLES'
-    blender.configure_cycles(
+    butil.configure_cycles(
         scene,
         samples=CYCLES_RENDER_SAMPLES,
         preview_samples=CYCLES_PREVIEW_SAMPLES,
@@ -271,10 +271,10 @@ def main(args):
             ((bright_contrast, 'Color'), (background, 'Color'))
         ]
         for link in links:
-            blender.add_link(scene.world, *link)
+            butil.add_link(scene.world, *link)
 
         try:
-            blender.arrange_nodes([
+            butil.arrange_nodes([
                 add_node,
                 tex_env,
                 bright_contrast,
@@ -305,7 +305,7 @@ def main(args):
         scene.frame_end = len(states) - 1
 
         for config_model in config['models']:
-            obj = blender.get_obj_by_name(config_model['name'])
+            obj = butil.get_obj_by_name(config_model['name'])
             obj.rotation_mode = 'QUATERNION'
 
         for frame, state in enumerate(states):
@@ -316,7 +316,7 @@ def main(args):
 
             for name, entity in state['objects'].items():
                 # print('\t' + name)
-                obj = blender.get_obj_by_name(name)
+                obj = butil.get_obj_by_name(name)
                 if obj is not None:
                     # print('\t\t', entity)
                     msc.add_keyframes(
@@ -332,7 +332,7 @@ def main(args):
 
         for config_model in config['models']:
             name = config_model['name']
-            obj = blender.get_obj_by_name(name)
+            obj = butil.get_obj_by_name(name)
             anim_data = obj.animation_data
             if anim_data is not None:
                 action = anim_data.action
@@ -379,23 +379,23 @@ def main(args):
             # root_obj.location = (0, 0, 0)
 
             for name, cam_pos, up_dir in [
-                    ('pos_x', (1, 0, 0), blender.UP_Y),
-                    ('pos_y', (0, 1, 0), blender.UP_Y),
-                    ('neg_y', (0, -1, 0), blender.UP_Y),
-                    ('pos_z', (0, 0, 1), blender.UP_X),
-                    ('neg_z', (0, 0, -1), blender.UP_X)]:
+                    ('pos_x', (1, 0, 0), butil.UP_Y),
+                    ('pos_y', (0, 1, 0), butil.UP_Y),
+                    ('neg_y', (0, -1, 0), butil.UP_Y),
+                    ('pos_z', (0, 0, 1), butil.UP_X),
+                    ('neg_z', (0, 0, -1), butil.UP_X)]:
                 print(name)
                 cam_pos = (
                     cam_pos[0] * pos,
                     cam_pos[1] * pos,
                     cam_pos[2] * pos)
                 cam.location = cam_pos
-                blender.point_at(
-                    cam, origin_obj, blender.TRACK_NEGATIVE_Z, up_dir)
+                butil.point_at(
+                    cam, origin_obj, butil.TRACK_NEGATIVE_Z, up_dir)
                 render(output_filename_prefix + '_outline_' + name + '.png')
 
     if do_quit:
-        blender.quit()
+        butil.quit()
 
     msc.PROFILER.summary()
     print('', flush=True)
@@ -409,7 +409,7 @@ def set_render_outlines(scene: bpy.types.Scene, line_thickness: float) -> None:
     scene.render.line_thickness = line_thickness
     scene.view_layers['View Layer'].freestyle_settings.as_render_pass = True
 
-    blender.add_link(
+    butil.add_link(
         scene,
         (scene.node_tree.nodes['Render Layers'], 'Freestyle'),
         (scene.node_tree.nodes['Composite'], 'Image'))
@@ -436,4 +436,4 @@ def find_space(space_type: str) -> Optional[btypes.Space]:
     return None
 
 
-main(blender.find_args(sys.argv))
+main(butil.find_args(sys.argv))
