@@ -260,14 +260,14 @@ def face_normal(tri_verts):
 def union(meshes: List[Mesh]) -> Mesh:
     """union using scad"""
     meshes_tm = [tm(*x) for x in meshes]
-    res = trimesh.boolean.union(meshes_tm, engine='scad', debug=True)
+    res = trimesh.boolean.union(meshes_tm, engine='scad', debug=False)
     return res.vertices, res.faces
 
 
 def difference(meshes: List[Mesh]):
     """difference using scad"""
     meshes_tm = [tm(*x) for x in meshes]
-    res = trimesh.boolean.difference(meshes_tm, engine='scad', debug=True)
+    res = trimesh.boolean.difference(meshes_tm, engine='scad', debug=False)
     return res.vertices, res.faces
 
 

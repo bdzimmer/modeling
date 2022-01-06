@@ -14,7 +14,7 @@ from typing import List, Tuple, Any, Union
 import bpy
 import bpy.types as btypes
 
-from modeling import blender
+from modeling.blender import util
 
 
 def _update_sys_path(path: str) -> None:
@@ -54,7 +54,7 @@ def build_add_node(mat: btypes.Material):
 def add_links(mat: btypes.Material, links: List[Tuple]):
     """helper"""
     for link in links:
-        blender.add_link(mat, *link)
+        util.add_link(mat, *link)
 
 
 def set_input(node: btypes.Node, name: Union[str, int], value: Any):
