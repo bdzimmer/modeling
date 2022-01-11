@@ -136,6 +136,7 @@ def add_model(
             # instance another object
             obj_copy = bpy.data.objects.get(instance_name)
             if obj_copy is not None:
+                # this instances everything
                 obj = bpy.data.objects.new(name, obj_copy.data)
                 bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
             else:
@@ -173,12 +174,21 @@ def add_model(
 
             PROFILER.tick('add - other - material')
 
+            # !!! NEW BEHAVIOR !!!
+            # added this for new instancing capability
+            # we probably don't want this all the time
+            obj.material_slots[0].link = 'OBJECT'
+
             material = add_material(mat, obj, model_config)
+
             if material is not None:
                 if obj.data.materials:
                     obj.data.materials[0] = material
                 else:
                     obj.data.materials.append(material)
+
+                # new behavior
+                obj.active_material = material
 
             PROFILER.tock('add - other - material')
 
@@ -261,7 +271,7 @@ def add_material(
             mat_name = obj.name + ' - ' + material.name  # derive unique name
             material = material.make_local()  # .copy() will share animation keyframes
             material.name = mat_name
-            obj.active_material = material  # this might not be necessary
+            # obj.active_material = material  # this might not be necessary
 
         obj.select_set(False)
 
