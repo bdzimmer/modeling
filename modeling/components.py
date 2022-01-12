@@ -206,7 +206,7 @@ def curved_plate(
         print("chamfer angle 0:", angle_x * 180 / np.pi)
         verts_tightened, _ = surface_revolution(
             outline, angle - 2.0 * angle_x, False, True, subdivisions)
-        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x)[0:3, 0:3])
+        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x))
 
         idxs_0 = range(1, verts.shape[0], 4)
         verts[idxs_0, :] = verts_tightened[idxs_0, :]
@@ -216,7 +216,7 @@ def curved_plate(
         print("chamfer angle 1:", angle_x * 180 / np.pi)
         verts_tightened, _ = surface_revolution(
             outline, angle - 2.0 * angle_x, False, True, subdivisions)
-        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x)[0:3, 0:3])
+        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x))
 
         idxs_1 = range(2, verts.shape[0], 4)
         verts[idxs_1, :] = verts_tightened[idxs_1, :]
@@ -280,7 +280,7 @@ def compound_radius_plate(
         print("chamfer angle 0:", angle_x * 180 / np.pi)
         verts_tightened, _ = surface_revolution(
             outline, angle - 2.0 * angle_x, False, True, subdivisions)
-        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x)[0:3, 0:3])
+        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x))
 
         idxs_0 = range(1, verts.shape[0], 4)
         verts[idxs_0, :] = verts_tightened[idxs_0, :]
@@ -290,7 +290,7 @@ def compound_radius_plate(
         print("chamfer angle 1:", angle_x * 180 / np.pi)
         verts_tightened, _ = surface_revolution(
             outline, angle - 2.0 * angle_x, False, True, subdivisions)
-        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x)[0:3, 0:3])
+        verts_tightened = np.dot(verts_tightened, util.rotation_y(angle_x))
 
         idxs_1 = range(2, verts.shape[0], 4)
         verts[idxs_1, :] = verts_tightened[idxs_1, :]
