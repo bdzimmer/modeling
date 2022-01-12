@@ -20,7 +20,7 @@ import pyrender
 
 from symbols import transforms
 from modeling import view
-from modeling.types import Mesh, Vec3, Verts, Verts2D
+from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33
 
 
 X_HAT = np.array([1.0, 0.0, 0.0])
@@ -65,19 +65,19 @@ def rev(xs: Any) -> List:
     return list(reversed(xs))
 
 
-def rotation_x(angle):
+def rotation_x(angle: float) -> Mat33:
     """create matrix for rotation around x axis"""
-    return trimesh.transformations.rotation_matrix(angle, X_HAT)
+    return trimesh.transformations.rotation_matrix(angle, X_HAT)[0:3, 0:3]
 
 
-def rotation_y(angle):
+def rotation_y(angle: float) -> Mat33:
     """create matrix for rotation around y axis"""
-    return trimesh.transformations.rotation_matrix(angle, Y_HAT)
+    return trimesh.transformations.rotation_matrix(angle, Y_HAT)[0:3, 0:3]
 
 
-def rotation_z(angle):
+def rotation_z(angle: float) -> Mat33:
     """create matrix for rotation around z axis"""
-    return trimesh.transformations.rotation_matrix(angle, Z_HAT)
+    return trimesh.transformations.rotation_matrix(angle, Z_HAT)[0:3, 0:3]
 
 
 def translate_mesh(mesh: Mesh, trans: Vec3) -> Mesh:
@@ -87,6 +87,8 @@ def translate_mesh(mesh: Mesh, trans: Vec3) -> Mesh:
 
 def rotate_mesh(mesh: Mesh, rot_mat: np.ndarray) -> Mesh:
     """rotate a mesh"""
+    assert rot_mat.shape == (3, 3), 'rotate_mesh requires 3x3 matrix'
+
     verts, faces = mesh
     verts = rotate_verts(verts, rot_mat)
     return verts, faces
@@ -99,16 +101,21 @@ def scale_mesh(mesh: Mesh, amount: Vec3) -> Mesh:
 
 def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
     """rotate verts"""
+    assert rot_mat.shape == (3, 3), 'rotate_verts requires 3x3 matrix'
     return np.transpose(np.dot(rot_mat, np.transpose(verts)))
 
 
 def rotate_vec(vec: Vec3, rot_mat: np.ndarray) -> np.ndarray:
     """rotate a single vector"""
+    assert rot_mat.shape == (3, 3), 'rotate_vec requires 3x3 matrix'
     return np.transpose(np.dot(rot_mat, np.transpose(np.array([vec]))))[0, :]
 
 
 def transform_mesh(mesh: Mesh, mat: np.ndarray) -> Mesh:
     """transform mesh"""
+
+    assert mat.shape == (4, 4), 'transform_mesh requires 4x4 matrix'
+
     verts, faces = mesh
 
     rot = mat[0:3, 0:3]
@@ -129,14 +136,14 @@ def spin(mesh, n_dups, offset):
     """repeate meshes in a circle"""
     # also sometimes known as "circular array"
     return [
-        transform_mesh(mesh, rotation_y(x / n_dups * FULL + offset))
+        rotate_mesh(mesh, rotation_y(x / n_dups * FULL + offset))
         for x in range(n_dups)]
 
 
 def spin_frac(mesh, n_dups, offset, frac):
     """repeat meshes in a fraction of a circle, including start and end"""
     return [
-        transform_mesh(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
+        rotate_mesh(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
         for x in range(n_dups)]
 
 

@@ -28,8 +28,10 @@ from modeling.blender.scene import MaterialKeys as Mk
 
 DO_RENDER = True
 
+# TODO: make these options
 CYCLES_RENDER_SAMPLES = 128
-CYCLES_PREVIEW_SAMPLES = 32
+# CYCLES_PREVIEW_SAMPLES = 32
+CYCLES_PREVIEW_SAMPLES = 4
 
 LIGHT_SUN = 'sun'
 

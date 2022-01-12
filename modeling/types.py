@@ -26,6 +26,10 @@ Mesh = Tuple[Verts, Faces]
 MeshExtended = Tuple[Mesh, List[int], List[int]]
 
 
+Mat33 = np.ndarray  # (3 x 3)
+Mat44 = np.ndarray  # (4 x 4)
+
+
 # some shorthand for numpy array creation
 
 def vec(*xs) -> np.ndarray:

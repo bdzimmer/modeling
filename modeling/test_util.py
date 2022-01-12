@@ -28,5 +28,5 @@ def test_union():
 
     # util.view_mesh(mesh)
     # util.view_mesh(mesh_c)
-    util.view_mesh(mesh_u)
-    util.view_mesh(mesh_u_self)
+    # util.view_mesh(mesh_u)
+    # util.view_mesh(mesh_u_self)
