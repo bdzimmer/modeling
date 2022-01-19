@@ -123,11 +123,13 @@ def add_model(
 
     model_filename = model_config.get(ModelKeys.FILENAME)
     if model_filename is not None:
+        print('importing', model_filename, flush=True)
         obj = import_obj(model_config[ModelKeys.FILENAME])
         bpy.data.materials.remove(obj.data.materials[0])
         obj.name = name
     else:
         instance_name = model_config.get(ModelKeys.INSTANCE)
+        print('instancing', instance_name, flush=True)
         if instance_name is None:
             # create empty
             obj = bpy.data.objects.new(name, None)
