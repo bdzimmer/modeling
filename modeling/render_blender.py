@@ -37,30 +37,31 @@ LIGHT_SUN = 'sun'
 
 
 # keys, mainly useed for the config render portion of the input config
-
-SIZE_KEY = 'size'
-CENTER_KEY = 'center'
-POS_SCALE_KEY = 'pos_scale'
-FILM_TRANSPARENT_KEY = 'film_transparent'
-LINE_THICKNESS_KEY = 'line_thickness'
-ORTHO_SCALE_KEY = 'ortho_scale'
-RENDER_EEVEE_USE_BLOOM_KEY = 'render_eevee_use_bloom'
-RENDER_USE_EEVEE_KEY = 'render_use_eevee'
-CYCLES_GPU_KEY = 'cycles_gpu'
-ANIMATION_USE_EEVEE_KEY = 'animation_use_eevee'
-RENDER_RESOLUTION_KEY = 'render_resolution'
-ROOT_OFFSET_KEY = 'root_offset'
-DO_QUIT_KEY = 'do_quit'
-DO_OUTLINE_KEY = 'do_outline'
-DO_RENDER_ANIMATION_KEY = 'do_render_animation'
-DO_RENDER_KEY = 'do_render'
-RENDER_BLENDER_KEY = 'render_blender'
-WORLD_KEY = 'world'
+class ConfigKeys:
+    SIZE_KEY = 'size'
+    CENTER_KEY = 'center'
+    POS_SCALE_KEY = 'pos_scale'
+    FILM_TRANSPARENT_KEY = 'film_transparent'
+    LINE_THICKNESS_KEY = 'line_thickness'
+    ORTHO_SCALE_KEY = 'ortho_scale'
+    RENDER_EEVEE_USE_BLOOM_KEY = 'render_eevee_use_bloom'
+    RENDER_USE_EEVEE_KEY = 'render_use_eevee'
+    CYCLES_GPU_KEY = 'cycles_gpu'
+    ANIMATION_USE_EEVEE_KEY = 'animation_use_eevee'
+    RENDER_RESOLUTION_KEY = 'render_resolution'
+    ROOT_OFFSET_KEY = 'root_offset'
+    DO_QUIT_KEY = 'do_quit'
+    DO_OUTLINE_KEY = 'do_outline'
+    DO_RENDER_ANIMATION_KEY = 'do_render_animation'
+    DO_RENDER_KEY = 'do_render'
+    RENDER_BLENDER_KEY = 'render_blender'
+    WORLD_KEY = 'world'
 
 
 def main(args):
     """main program"""
 
+    # not sure if this does anything
     butil.disable_splash()
 
     input_filename = args[0]
@@ -87,30 +88,31 @@ def main(args):
 
     # some render_blender specific settings
 
-    config_render = config[RENDER_BLENDER_KEY]
+    Ck = ConfigKeys
+    config_render = config[Ck.RENDER_BLENDER_KEY]
 
-    do_render = config_render.get(DO_RENDER_KEY, True)
-    do_render_animation = config_render.get(DO_RENDER_ANIMATION_KEY, False)
-    do_outline = config_render.get(DO_OUTLINE_KEY, False)
-    do_quit = config_render.get(DO_QUIT_KEY, True)
-    root_offset = config_render.get(ROOT_OFFSET_KEY, True)
+    do_render = config_render.get(Ck.DO_RENDER_KEY, True)
+    do_render_animation = config_render.get(Ck.DO_RENDER_ANIMATION_KEY, False)
+    do_outline = config_render.get(Ck.DO_OUTLINE_KEY, False)
+    do_quit = config_render.get(Ck.DO_QUIT_KEY, True)
+    root_offset = config_render.get(Ck.ROOT_OFFSET_KEY, False)
 
-    render_resolution = config_render.get(RENDER_RESOLUTION_KEY, [1920, 1080])
-    animation_use_eevee = config_render.get(ANIMATION_USE_EEVEE_KEY, False)
-    render_use_eevee = config_render.get(RENDER_USE_EEVEE_KEY, False)
-    render_eevee_use_bloom = config_render.get(RENDER_EEVEE_USE_BLOOM_KEY, False)
-    cycles_gpu = config_render.get(CYCLES_GPU_KEY, False)
+    render_resolution = config_render.get(Ck.RENDER_RESOLUTION_KEY, [1920, 1080])
+    animation_use_eevee = config_render.get(Ck.ANIMATION_USE_EEVEE_KEY, False)
+    render_use_eevee = config_render.get(Ck.RENDER_USE_EEVEE_KEY, False)
+    render_eevee_use_bloom = config_render.get(Ck.RENDER_EEVEE_USE_BLOOM_KEY, False)
+    cycles_gpu = config_render.get(Ck.CYCLES_GPU_KEY, False)
 
-    ortho_scale = config_render.get(ORTHO_SCALE_KEY, 1.1)
-    line_thickness = config_render.get(LINE_THICKNESS_KEY, 1.0)
-    film_transparent = config_render.get(FILM_TRANSPARENT_KEY, True)
+    ortho_scale = config_render.get(Ck.ORTHO_SCALE_KEY, 1.1)
+    line_thickness = config_render.get(Ck.LINE_THICKNESS_KEY, 1.0)
+    film_transparent = config_render.get(Ck.FILM_TRANSPARENT_KEY, True)
 
-    scale = config_render.get(POS_SCALE_KEY, 1.5)
-    center = config_render[CENTER_KEY]
-    pos = config_render[SIZE_KEY] * scale
-    clip_end = config_render[SIZE_KEY] * clip_scale
+    scale = config_render.get(Ck.POS_SCALE_KEY, 1.5)
+    center = config_render[Ck.CENTER_KEY]
+    pos = config_render[Ck.SIZE_KEY] * scale
+    clip_end = config_render[Ck.SIZE_KEY] * clip_scale
 
-    world_config = config_render.get(WORLD_KEY, {})
+    world_config = config_render.get(Ck.WORLD_KEY, {})
 
     root_obj_loc = (-center[0], -center[1], -center[2])
 
@@ -126,6 +128,35 @@ def main(args):
 
     butil.delete_all_objects()
     butil.reset_scene()
+
+    # ~~~~ create view layers
+
+    scene = bpy.context.scene
+
+    layers = config.get('layers')
+    if layers is not None:
+        for layer_name in layers:
+            if scene.view_layers.get(layer_name) is None:
+                bpy.ops.scene.view_layer_add(type='NEW')
+                bpy.context.view_layer.name = layer_name
+        if layers:
+            bpy.context.window.view_layer = scene.view_layers[layers[0]]
+
+    # ~~~~ create collections
+
+    collections = config.get('collections')
+    if collections is not None:
+        for col_dict in collections:
+            col_name = col_dict['name']
+            print(col_name)
+            if scene.collection.children.get(col_name) is None:
+                collection = bpy.data.collections.new(col_name)
+                scene.collection.children.link(collection)
+            for vl in scene.view_layers:
+                for col in vl.layer_collection.children:
+                    if col.name == col_name and vl.name in col_dict['hide']:
+                        print(f'\thiding collection `{col.name}` from view layer `{vl.name}`')
+                        col.exclude = True
 
     # ~~~~ create materials
 
@@ -222,8 +253,6 @@ def main(args):
         msc.set_transformation(light_obj, light['transformation'])
 
     # ~~~~ render settings
-
-    scene = bpy.context.scene
 
     # set background color
     background = scene.world.node_tree.nodes['Background']
