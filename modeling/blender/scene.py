@@ -23,11 +23,12 @@ PROFILER = profiler.Profiler()
 class ModelKeys:
     """keys for model dict"""
 
-    NAME = 'name'            # name of model
-    FILENAME = 'filename'    # filename to load, usually obj
-    COPY = 'copy'            # name of other model to copy mesh data from
-    COLOR = 'color'          # default / overall color for the model
-    MATERIAL = 'material'    # material information
+    NAME = 'name'              # name of model
+    FILENAME = 'filename'      # filename to load, usually obj
+    COPY = 'copy'              # name of other model to copy mesh data from
+    COLOR = 'color'            # default / overall color for the model
+    MATERIAL = 'material'      # material information
+    COLLECTION = 'collection'  # collection name
 
     # if present, enable auto smoothing at the specified angle
     AUTO_SMOOTH_ANGLE = 'auto_smooth_angle'
@@ -121,12 +122,16 @@ def add_model(
 
     PROFILER.tick('add - load / instance / copy')
 
+    collection_name = model_config.get(ModelKeys.COLLECTION, DEFAULT_COLLECTION)
+    print('collection:', collection_name)
+
     model_filename = model_config.get(ModelKeys.FILENAME)
     if model_filename is not None:
         print('importing', model_filename, flush=True)
         obj = import_obj(model_config[ModelKeys.FILENAME])
         bpy.data.materials.remove(obj.data.materials[0])
         obj.name = name
+
     else:
         instance_name = model_config.get(ModelKeys.INSTANCE)
         print('instancing', instance_name, flush=True)
@@ -210,6 +215,13 @@ def add_model(
         obj.hide_viewport = True
         obj.hide_render = True
         PROFILER.tock('add - other - hide')
+
+    # move into appropriate collection
+    if collection_name != DEFAULT_COLLECTION:
+        if model_filename is not None:
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+        bpy.data.collections[collection_name].objects.link(obj)
 
     # tock before recurse
     PROFILER.tock('add - other')
