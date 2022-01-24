@@ -192,7 +192,29 @@ def main(args):
                     'hide': True
                 }, parent)
 
-    # ~~~~ load OBJ files
+    # ~~~~ special origin object
+
+    origin_obj = bpy.data.objects.new('origin', None)
+    bpy.context.scene.collection.objects.link(origin_obj)
+    origin_obj.location = (0, 0, 0)
+
+    # ~~~~ camera
+
+    # for now assume one camera
+
+    bpy.ops.object.camera_add()
+    cam = bpy.context.object
+    cam.name = 'Camera'
+    cam.data.clip_end = clip_end
+
+    fov = config['camera'].get('fov')
+    if fov is not None:
+        cam.data.lens_unit = 'FOV'
+        cam.data.angle = math.radians(fov)
+
+    bpy.context.scene.camera = cam
+
+    # ~~~~ load models
 
     msc.PROFILER.tick('all loading')
 
@@ -210,28 +232,9 @@ def main(args):
     if root_offset:
         root_obj.location = root_obj_loc
 
-    # ~~~~ special origin object
-
-    origin_obj = bpy.data.objects.new('origin', None)
-    bpy.context.scene.collection.objects.link(origin_obj)
-    origin_obj.location = (0, 0, 0)
-
-    # ~~~~ camera
-
-    # for now assume one camera
-
-    bpy.ops.object.camera_add()
-    cam = bpy.context.object
-    cam.name = 'Camera'
-    cam.data.clip_end = clip_end
+    # ~~~~ set camera transform
 
     msc.set_transformation(cam, config['camera']['transformation'])
-    fov = config['camera'].get('fov')
-    if fov is not None:
-        cam.data.lens_unit = 'FOV'
-        cam.data.angle = math.radians(fov)
-
-    bpy.context.scene.camera = cam
 
     # ~~~~ lights
 
@@ -251,6 +254,12 @@ def main(args):
             print(f'Invalid light type')
 
         msc.set_transformation(light_obj, light['transformation'])
+
+        collection_name = light.get(msc.ModelKeys.COLLECTION, msc.DEFAULT_COLLECTION)
+        if collection_name != msc.DEFAULT_COLLECTION:
+            for coll in light_obj.users_collection:
+                coll.objects.unlink(light_obj)
+            bpy.data.collections[collection_name].objects.link(light_obj)
 
     # ~~~~ render settings
 

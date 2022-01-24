@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 
 import bpy
 from bpy import types as btypes
+import mathutils
 
 from modeling import profiler
 from modeling.blender import util as butil, materials
@@ -69,6 +70,7 @@ class PropsKeys:
     BLENDER_SUBSURFACE_USE_ADAPTIVE_SUBDIVISION = 'use_adaptive_subdivision'
     BLENDER_BEVEL = 'blender:bevel'
     BLENDER_BEVEL_WIDTH = 'width'
+    BLENDER_CHILD_OF = "blender:child_of"
 
 
 class TransformationKeys:
@@ -423,6 +425,16 @@ def set_prop(
         # TODO: write this in a better way
         obj.modifiers['Bevel'].width = prop_dict[PropsKeys.BLENDER_BEVEL_WIDTH]
         # obj.modifiers['Wireframe'].use_even_offset = wireframe.get(PropsKeys.BLENDER_WIREFRAME_USE_EVEN_OFFSET, True)
+
+    elif prop_type == PropsKeys.BLENDER_CHILD_OF:
+        obj.constraints.new('CHILD_OF')
+        child_of = obj.constraints['Child Of']
+        # not sure why this doesn't work
+        child_of.target = butil.get_obj_by_name(prop_dict.get('object'))
+        child_of.use_rotation_x = False
+        child_of.use_rotation_y = False
+        child_of.use_rotation_z = False
+        child_of.inverse_matrix = mathutils.Matrix.Identity(4)
 
 
 def set_transformation(
