@@ -6,6 +6,7 @@ Utilties for working with my own scene JSON format.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
+import os
 
 import math
 from typing import Any, Dict, Optional
@@ -123,10 +124,23 @@ def add_model(
 
     model_filename = model_config.get(ModelKeys.FILENAME)
     if model_filename is not None:
-        print('importing', model_filename, flush=True)
-        obj = import_obj(model_config[ModelKeys.FILENAME])
-        bpy.data.materials.remove(obj.data.materials[0])
-        obj.name = name
+        if not model_filename.startswith('append'):
+            print('importing', model_filename, flush=True)
+            obj = import_obj(model_config[ModelKeys.FILENAME])
+            bpy.data.materials.remove(obj.data.materials[0])
+            obj.name = name
+        else:
+            _, filepath, directory, filename = model_filename.split(':')
+            print(filepath, directory, filename)
+            # TODO: find a way to do this without ops
+            bpy.ops.wm.append(
+                filepath=os.path.join(filepath, directory, filename),
+                directory=os.path.join(filepath, directory),
+                filename=filename
+            )
+            obj = bpy.context.object
+            obj.name = name
+
     else:
         instance_name = model_config.get(ModelKeys.INSTANCE)
         print('instancing', instance_name, flush=True)
