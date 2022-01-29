@@ -144,8 +144,21 @@ def add_model(
                 directory=os.path.join(filepath, directory),
                 filename=filename
             )
-            obj = bpy.context.object
-            obj.name = name
+            if directory == 'Object':
+                obj = bpy.context.object
+                obj.name = name
+            elif directory == 'Collection':
+                obj = butil.get_obj_by_name(name)
+                # print('collection object:', obj)
+                # move into appropriate collection
+                if collection_name != DEFAULT_COLLECTION:
+                    coll = obj.users_collection[0]  # lololol
+                    # can we assume that it's currently in the default collection?
+                    bpy.data.collections[DEFAULT_COLLECTION].children.unlink(coll)
+                    bpy.data.collections[collection_name].children.link(coll)
+                return obj
+            else:
+                return None
 
     else:
         instance_name = model_config.get(ModelKeys.INSTANCE)
