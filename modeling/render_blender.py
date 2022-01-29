@@ -11,7 +11,7 @@ import pickle
 import os
 import json
 import sys
-from typing import Optional
+from typing import Optional, List
 
 import bpy
 import bpy.types as btypes
@@ -29,7 +29,9 @@ from modeling.blender.scene import MaterialKeys as Mk
 DO_RENDER = True
 
 # TODO: make these options
-CYCLES_RENDER_SAMPLES = 128
+# CYCLES_RENDER_SAMPLES = 128
+CYCLES_RENDER_SAMPLES = 32
+
 # CYCLES_PREVIEW_SAMPLES = 32
 CYCLES_PREVIEW_SAMPLES = 4
 
@@ -141,6 +143,10 @@ def main(args):
                 bpy.context.view_layer.name = layer_name
         if layers:
             bpy.context.window.view_layer = scene.view_layers[layers[0]]
+            scene.view_layers[-1].use_pass_environment = True
+
+        # set up appropriate compositing
+        add_compositor_nodes(scene)
 
     # ~~~~ create collections
 
@@ -474,6 +480,56 @@ def find_space(space_type: str) -> Optional[btypes.Space]:
                     if space.type == space_type:
                         return space
     return None
+
+
+def add_compositor_nodes(scene: bpy.types.Scene):
+    """set up compositor nodes"""
+
+    scene.use_nodes = True
+
+    tree = bpy.context.scene.node_tree
+    tree.nodes.clear()
+
+    add_node = ms.build_add_node(scene)
+
+    nodes = []
+    links = []
+
+    for layer in scene.view_layers:
+        # TODO: layer input
+        ln = add_node(btypes.CompositorNodeRLayers)
+        ln.name = layer.name
+        ln.label = layer.name
+        ln.layer = layer.name
+        ao = add_node(btypes.CompositorNodeAlphaOver)
+
+        nodes.append((ln, ao))
+
+    comp = add_node(btypes.CompositorNodeComposite)
+    view = add_node(btypes.CompositorNodeViewer)
+
+    for idx, (fst, snd) in enumerate(zip(nodes[:-1], nodes[1:])):
+        ln_0, ao_0 = fst
+        ln_1, ao_1 = snd
+
+        if idx == 0:
+            links.append(((ln_0, 'Image'), (ao_1, 2)))
+        else:
+            links.append(((ao_0, 'Image'), (ao_1, 2)))
+
+        if idx < len(nodes) - 2:
+            links.append(((ln_1, 'Image'), (ao_1, 1)))
+        else:
+            # use environment past for last
+            links.append(((ln_1, 'Env'), (ao_1, 1)))
+
+    links.append(((nodes[-1][1], 'Image'), (comp, 'Image')))
+    links.append(((nodes[-1][1], 'Image'), (view, 'Image')))
+
+    ms.add_links(
+        scene,
+        links
+    )
 
 
 main(butil.find_args(sys.argv))

@@ -156,7 +156,6 @@ def add_model(
                     # can we assume that it's currently in the default collection?
                     bpy.data.collections[DEFAULT_COLLECTION].children.unlink(coll)
                     bpy.data.collections[collection_name].children.link(coll)
-                return obj
             else:
                 return None
 
@@ -227,15 +226,15 @@ def add_model(
 
             PROFILER.tock('add - other - material')
 
-        # additional properties
+    # additional properties
 
-        props = model_config.get(ModelKeys.PROPS)
+    props = model_config.get(ModelKeys.PROPS)
 
-        if props is not None:
-            PROFILER.tick('add - other - properties')
-            for prop in props:
-                set_prop(obj, prop)
-            PROFILER.tock('add - other - properties')
+    if props is not None:
+        PROFILER.tick('add - other - properties')
+        for prop in props:
+            set_prop(obj, prop)
+        PROFILER.tock('add - other - properties')
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
@@ -455,7 +454,6 @@ def set_prop(
     elif prop_type == PropsKeys.BLENDER_CHILD_OF:
         obj.constraints.new('CHILD_OF')
         child_of = obj.constraints['Child Of']
-        # not sure why this doesn't work
         child_of.target = butil.get_obj_by_name(prop_dict.get('object'))
         child_of.use_rotation_x = False
         child_of.use_rotation_y = False

@@ -310,6 +310,9 @@ def configure_cycles(
 
     scene.render.engine = "CYCLES"
 
+    scene.cycles.use_preview_denoising = False
+    scene.cycles.use_denoising = False
+
     # this could be made an argument someday if necessary
     scene.cycles.feature_set = "EXPERIMENTAL"
 

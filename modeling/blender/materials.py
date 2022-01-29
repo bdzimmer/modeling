@@ -42,7 +42,7 @@ def material_python(
     return func(name, obj)
 
 
-def build_add_node(mat: btypes.Material):
+def build_add_node(mat: Union[btypes.Material, btypes.Scene]):
     """build a function to add a node"""
     def add_node(cls: type):
         """add a new node"""
