@@ -116,7 +116,7 @@ DEFAULT_COLLECTION = 'Collection'
 
 def add_model(
         model_config: Dict[str, Any],
-        parent: Optional[bpy.types.Object]) -> bpy.types.Object:
+        parent: Optional[bpy.types.Object]) -> Optional[bpy.types.Object]:
     """add a model to the blender scene"""
 
     # Note that some logic in here for material assumes that model names are unique.
@@ -245,10 +245,10 @@ def add_model(
 
     # move into appropriate collection
     if collection_name != DEFAULT_COLLECTION:
-        if model_filename is not None:
+        if model_filename is not None and not model_filename.startswith('append'):
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
-        bpy.data.collections[collection_name].objects.link(obj)
+            bpy.data.collections[collection_name].objects.link(obj)
 
     # tock before recurse
     PROFILER.tock('add - other')
