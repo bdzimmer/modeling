@@ -161,12 +161,14 @@ def add_model(
 
     else:
         instance_name = model_config.get(ModelKeys.INSTANCE)
-        print('instancing', instance_name, flush=True)
+        print(model_config)
         if instance_name is None:
+            print('creating an empty', flush=True)
             # create empty
             obj = bpy.data.objects.new(name, None)
             bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
         else:
+            print('instancing', instance_name, flush=True)
             # instance another object
             obj_copy = bpy.data.objects.get(instance_name)
             if obj_copy is not None:
@@ -192,6 +194,7 @@ def add_model(
         PROFILER.tock('add - other - transformation')
 
     if obj.data is not None:
+        print('obj.data is not None', flush=True)
 
         # enable smooth shading
         auto_smooth_angle = model_config.get(ModelKeys.AUTO_SMOOTH_ANGLE)
@@ -226,15 +229,18 @@ def add_model(
 
             PROFILER.tock('add - other - material')
 
-    # additional properties
+    if obj.data is not None:
+        # additional properties
+        # TODO: per-property logic for whether a property can be applied to an empty
+        #       I want to be able to apply childof constraint to empties, for instance
 
-    props = model_config.get(ModelKeys.PROPS)
+        props = model_config.get(ModelKeys.PROPS)
 
-    if props is not None:
-        PROFILER.tick('add - other - properties')
-        for prop in props:
-            set_prop(obj, prop)
-        PROFILER.tock('add - other - properties')
+        if props is not None:
+            PROFILER.tick('add - other - properties')
+            for prop in props:
+                set_prop(obj, prop)
+            PROFILER.tock('add - other - properties')
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
