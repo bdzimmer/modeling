@@ -194,7 +194,6 @@ def add_model(
         PROFILER.tock('add - other - transformation')
 
     if obj.data is not None:
-        print('obj.data is not None', flush=True)
 
         # enable smooth shading
         auto_smooth_angle = model_config.get(ModelKeys.AUTO_SMOOTH_ANGLE)
@@ -229,18 +228,15 @@ def add_model(
 
             PROFILER.tock('add - other - material')
 
-    if obj.data is not None:
-        # additional properties
-        # TODO: per-property logic for whether a property can be applied to an empty
-        #       I want to be able to apply childof constraint to empties, for instance
+    # additional properties
 
-        props = model_config.get(ModelKeys.PROPS)
+    props = model_config.get(ModelKeys.PROPS)
 
-        if props is not None:
-            PROFILER.tick('add - other - properties')
-            for prop in props:
-                set_prop(obj, prop)
-            PROFILER.tock('add - other - properties')
+    if props is not None:
+        PROFILER.tick('add - other - properties')
+        for prop in props:
+            set_prop(obj, prop)
+        PROFILER.tock('add - other - properties')
 
     if model_config.get('hide', False):
         # obj.hide_set(True)
@@ -389,23 +385,9 @@ def set_prop(
 
     prop_type = prop_dict['type']
 
-    # if prop_type == PropsKeys.BLENDER_MATERIALS_LIBRARY:
-    #     # TODO: make this more robust
-    #     bpy.context.scene.matlib.lib_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_LIB_INDEX]
-    #     bpy.context.scene.matlib.mat_index = prop_dict[PropsKeys.BLENDER_MATERIALS_LIBRARY_MAT_INDEX]
-    #     obj.select_set(True)
-    #     bpy.context.scene.matlib.apply(bpy.context)
-    #
-    #     if prop_dict.get('copy', True):
-    #         mat = obj.active_material
-    #         mat_name = obj.name + ' - ' + mat.name
-    #         # mat = mat.copy()
-    #         mat = mat.make_local()  # .copy() will share animation keyframes
-    #         mat.name = mat_name
-    #
-    #         obj.active_material = mat
-    #
-    #     obj.select_set(False)
+    if obj.data is None and prop_type not in [PropsKeys.BLENDER_CHILD_OF]:
+        print(f'property `{prop_type}` not allowed for empty')
+        return
 
     if prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
