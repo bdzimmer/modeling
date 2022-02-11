@@ -453,7 +453,7 @@ def set_render_outlines(scene: bpy.types.Scene, line_thickness: float) -> None:
     scene.use_nodes = True
     scene.render.use_freestyle = True
     scene.render.line_thickness = line_thickness
-    scene.view_layers['View Layer'].freestyle_settings.as_render_pass = True
+    scene.view_layers[msc.DEFAULT_VIEW_LAYER].freestyle_settings.as_render_pass = True
 
     butil.add_link(
         scene,

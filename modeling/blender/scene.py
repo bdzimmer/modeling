@@ -110,8 +110,9 @@ class MaterialKeys:
     UPDATES = 'updates'
 
 
-# TODO: figure out how to control the name of the default collection
+# Note that these might change between blender versions, eg 'View Layer' -> 'ViewLayer'
 DEFAULT_COLLECTION = 'Collection'
+DEFAULT_VIEW_LAYER = 'ViewLayer'
 
 
 def add_model(
