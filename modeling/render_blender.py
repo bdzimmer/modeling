@@ -11,7 +11,7 @@ import pickle
 import os
 import json
 import sys
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import bpy
 import bpy.types as btypes
@@ -169,7 +169,7 @@ def main(args):
     materials = config.get('materials')
     if materials is not None:
         if materials:
-            parent = msc.add_model({'name': 'MATERIAL PREVIEWS', 'hide': True}, None)
+            parent = msc.add_model(msc.ModelConfig(name='MATERIAL PREVIEWS', hide=True), None)
             for material in materials:
 
                 # if there is no name field, it's expected that we
@@ -182,12 +182,12 @@ def main(args):
                         material[Mk.MATLIB][Mk.MATLIB_MAT_NAME]
                     )
 
-                msc.add_model({
-                    'name': 'MATERIAL PREVIEW - ' + material_name,
-                    'filename': 'models/sphere.obj',
-                    'auto_smooth_angle': 30.0,
-                    'material': material,
-                    'props': [
+                msc.add_model(msc.ModelConfig(
+                    name=('MATERIAL PREVIEW - ' + material_name),
+                    filename='models/sphere.obj',
+                    auto_smooth_angle=30.0,
+                    material=material,
+                    props=[
                         {
                             'type': 'blender:subsurface',
                             'levels': 2,
@@ -195,8 +195,8 @@ def main(args):
                             'use_adaptive_subdivision': False
                         }
                     ],
-                    'hide': True
-                }, parent)
+                    hide=True
+                ), parent)
 
     # ~~~~ special origin object
 
@@ -224,10 +224,13 @@ def main(args):
 
     msc.PROFILER.tick('all loading')
 
+    # for now, test
+    model_trees = [parse_model(x) for x in config['models']]
+
     # for now, just load starting from the first model
-    root_obj = msc.add_model(config['models'][0], None)
+    root_obj = msc.add_model(model_trees[0], None)
     if len(config['models']) > 1:
-        for model in config['models'][1:]:
+        for model in model_trees[1:]:
             msc.add_model(model, None)
 
     msc.PROFILER.tock('all loading')
@@ -530,6 +533,15 @@ def add_compositor_nodes(scene: bpy.types.Scene):
         scene,
         links
     )
+
+
+def parse_model(model: Dict) -> msc.ModelConfig:
+    model = dict(model)
+    children = model.get('children')
+    if children is not None:
+        children = [parse_model(x) for x in children]
+        model['children'] = children
+    return msc.ModelConfig(**model)
 
 
 main(butil.find_args(sys.argv))

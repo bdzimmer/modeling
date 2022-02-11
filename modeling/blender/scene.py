@@ -9,7 +9,7 @@ Utilties for working with my own scene JSON format.
 import os
 
 import math
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import bpy
 from bpy import types as btypes
@@ -20,6 +20,37 @@ from modeling.blender import util as butil, materials
 
 
 PROFILER = profiler.Profiler()
+
+class ModelConfig:
+    """model configuration"""
+    def __init__(
+            self,
+            name: str,
+            filename: Optional[str] = None,
+            copy: Optional[str] = None,
+            color: Optional[List] = None,
+            material: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            transformation: Optional[Dict] = None,
+            auto_smooth_angle: Optional[float] = None,
+            hide: Optional[bool] = None,
+            props: Optional[List[Dict]] = None,
+            instance: Optional[str] = None,
+            children: Optional[List] = None):
+        """constructor"""
+
+        self.name = name
+        self.filename = filename
+        self.copy = copy
+        self.color = color
+        self.material = material
+        self.collection = collection
+        self.transformation = transformation
+        self.auto_smooth_angle = auto_smooth_angle
+        self.hide = hide
+        self.props = props
+        self.instance = instance
+        self.children = children
 
 
 class ModelKeys:
@@ -116,24 +147,24 @@ DEFAULT_VIEW_LAYER = 'ViewLayer'
 
 
 def add_model(
-        model_config: Dict[str, Any],
+        model_config: ModelConfig,
         parent: Optional[bpy.types.Object]) -> Optional[bpy.types.Object]:
     """add a model to the blender scene"""
 
     # Note that some logic in here for material assumes that model names are unique.
 
-    name = model_config[ModelKeys.NAME]
+    name = model_config.name
 
     PROFILER.tick('add - load / instance / copy')
 
-    collection_name = model_config.get(ModelKeys.COLLECTION, DEFAULT_COLLECTION)
+    collection_name = model_config.collection if model_config.collection is not None else DEFAULT_COLLECTION
     print('collection:', collection_name)
 
-    model_filename = model_config.get(ModelKeys.FILENAME)
+    model_filename = model_config.filename
     if model_filename is not None:
         if not model_filename.startswith('append'):
             print('importing', model_filename, flush=True)
-            obj = import_obj(model_config[ModelKeys.FILENAME])
+            obj = import_obj(model_filename)
             bpy.data.materials.remove(obj.data.materials[0])
             obj.name = name
         else:
@@ -161,7 +192,7 @@ def add_model(
                 return None
 
     else:
-        instance_name = model_config.get(ModelKeys.INSTANCE)
+        instance_name = model_config.instance
         print(model_config)
         if instance_name is None:
             print('creating an empty', flush=True)
@@ -188,7 +219,7 @@ def add_model(
         obj.parent = parent
         PROFILER.tock('add - other - parent')
 
-    transformation = model_config.get(ModelKeys.TRANSFORMATION)
+    transformation = model_config.transformation
     if transformation is not None:
         PROFILER.tick('add - other - transformation')
         set_transformation(obj, transformation)
@@ -197,7 +228,7 @@ def add_model(
     if obj.data is not None:
 
         # enable smooth shading
-        auto_smooth_angle = model_config.get(ModelKeys.AUTO_SMOOTH_ANGLE)
+        auto_smooth_angle = model_config.auto_smooth_angle
         if auto_smooth_angle is not None:
             PROFILER.tick('add - other - smooth')
             obj.data.use_auto_smooth = True
@@ -205,7 +236,7 @@ def add_model(
             bpy.ops.object.shade_smooth()
             PROFILER.tock('add - other - smooth')
 
-        mat = model_config.get(ModelKeys.MATERIAL)
+        mat = model_config.material
 
         if mat is not None:
 
@@ -231,7 +262,7 @@ def add_model(
 
     # additional properties
 
-    props = model_config.get(ModelKeys.PROPS)
+    props = model_config.props
 
     if props is not None:
         PROFILER.tick('add - other - properties')
@@ -239,7 +270,8 @@ def add_model(
             set_prop(obj, prop)
         PROFILER.tock('add - other - properties')
 
-    if model_config.get('hide', False):
+    hide = model_config.hide if model_config.hide is not None else False
+    if hide:
         # obj.hide_set(True)
         PROFILER.tick('add - other - hide')
         obj.hide_viewport = True
@@ -256,9 +288,9 @@ def add_model(
     # tock before recurse
     PROFILER.tock('add - other')
 
-    children = model_config.get('children', [])
-    for child in children:
-        add_model(child, obj)
+    if model_config.children is not None:
+        for child in model_config.children:
+            add_model(child, obj)
 
     return obj
 
@@ -266,7 +298,7 @@ def add_model(
 def add_material(
         mat: Dict,
         obj: btypes.Object,
-        model_config: Optional[Dict]) -> Optional[btypes.Material]:
+        model_config: Optional[ModelConfig]) -> Optional[btypes.Material]:
 
     instance_dict = mat.get(MaterialKeys.INSTANCE)
     mat_python = mat.get(MaterialKeys.PYTHON)
@@ -339,7 +371,7 @@ def add_material(
 
         bsdf = material.node_tree.nodes['Principled BSDF']
 
-        color = model_config.get(ModelKeys.COLOR)
+        color = model_config.color
         if color is not None:
             bsdf.inputs['Base Color'].default_value = color
 
