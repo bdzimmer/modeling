@@ -21,16 +21,28 @@ from modeling.blender import util as butil, materials
 
 PROFILER = profiler.Profiler()
 
+
+class ModelTypes:
+    """model types"""
+    MODEL = 'model'
+    INSTANCE = 'instance'
+    EMPTY = 'empty'
+    LIGHT = 'light'
+
+
 class ModelConfig:
     """model configuration"""
     def __init__(
             self,
             name: str,
+            type: str,
             filename: Optional[str] = None,
             copy: Optional[str] = None,
             color: Optional[List] = None,
             material: Optional[Dict] = None,
             collection: Optional[str] = None,
+            info: Optional[Dict] = None,
+
             transformation: Optional[Dict] = None,
             auto_smooth_angle: Optional[float] = None,
             hide: Optional[bool] = None,
@@ -40,11 +52,14 @@ class ModelConfig:
         """constructor"""
 
         self.name = name
+        self.type = type
         self.filename = filename
         self.copy = copy
         self.color = color
         self.material = material
         self.collection = collection
+        self.info = info
+
         self.transformation = transformation
         self.auto_smooth_angle = auto_smooth_angle
         self.hide = hide
@@ -57,11 +72,13 @@ class ModelKeys:
     """keys for model dict"""
 
     NAME = 'name'              # name of model
+    TYPE = 'type'
     FILENAME = 'filename'      # filename to load, usually obj
     COPY = 'copy'              # name of other model to copy mesh data from
     COLOR = 'color'            # default / overall color for the model
     MATERIAL = 'material'      # material information
     COLLECTION = 'collection'  # collection name
+    INFO = 'info'
 
     # if present, enable auto smoothing at the specified angle
     AUTO_SMOOTH_ANGLE = 'auto_smooth_angle'
@@ -160,16 +177,17 @@ def add_model(
     collection_name = model_config.collection if model_config.collection is not None else DEFAULT_COLLECTION
     print('collection:', collection_name)
 
-    model_filename = model_config.filename
-    if model_filename is not None:
-        if not model_filename.startswith('append'):
-            print('importing', model_filename, flush=True)
-            obj = import_obj(model_filename)
+    if model_config.type == ModelTypes.MODEL:
+        # assumes .filename is defined
+        if not model_config.filename.startswith('append'):
+            print('importing', model_config.filename, flush=True)
+            obj = import_obj(model_config.filename)
             bpy.data.materials.remove(obj.data.materials[0])
             obj.name = name
         else:
-            _, filepath, directory, filename = model_filename.split(':')
-            print(filepath, directory, filename)
+            _, filepath, directory, filename = model_config.filename.split(':')
+            print('appending', filepath, directory, filename, flush=True)
+
             # TODO: find a way to do this without ops
             bpy.ops.wm.append(
                 filepath=os.path.join(filepath, directory, filename),
@@ -191,24 +209,30 @@ def add_model(
             else:
                 return None
 
-    else:
-        instance_name = model_config.instance
-        print(model_config)
-        if instance_name is None:
-            print('creating an empty', flush=True)
-            # create empty
-            obj = bpy.data.objects.new(name, None)
+    elif model_config.type == ModelTypes.INSTANCE:
+        # assumes .instance is defined
+        # TODO: get rid of instance field and use something from info
+
+        print('instancing', model_config.instance, flush=True)
+
+        # instance another object
+        obj_copy = bpy.data.objects.get(model_config.instance)
+        if obj_copy is not None:
+            # this instances everything
+            obj = bpy.data.objects.new(name, obj_copy.data)
             bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
         else:
-            print('instancing', instance_name, flush=True)
-            # instance another object
-            obj_copy = bpy.data.objects.get(instance_name)
-            if obj_copy is not None:
-                # this instances everything
-                obj = bpy.data.objects.new(name, obj_copy.data)
-                bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
-            else:
-                print(f'object `{instance_name}` not found to instance')
+            print(f'object `{model_config.instance}` not found to instance')
+
+    elif model_config.type == ModelTypes.EMPTY:
+        print('creating an empty', flush=True)
+        # create empty
+        obj = bpy.data.objects.new(name, None)
+        bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+
+    elif model_config.type == ModelTypes.LIGHT:
+        print('lights not implemented yet', flush=True)
+        return None
 
     PROFILER.tock('add - load / instance / copy')
 
@@ -261,12 +285,9 @@ def add_model(
             PROFILER.tock('add - other - material')
 
     # additional properties
-
-    props = model_config.props
-
-    if props is not None:
+    if model_config.props is not None:
         PROFILER.tick('add - other - properties')
-        for prop in props:
+        for prop in model_config.props:
             set_prop(obj, prop)
         PROFILER.tock('add - other - properties')
 
@@ -279,8 +300,9 @@ def add_model(
         PROFILER.tock('add - other - hide')
 
     # move into appropriate collection
+    # TODO: probably not correct...does this need to work for instancing?
     if collection_name != DEFAULT_COLLECTION:
-        if model_filename is not None and not model_filename.startswith('append'):
+        if model_config.type == ModelTypes.MODEL and not model_config.filename.startswith('append'):
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
             bpy.data.collections[collection_name].objects.link(obj)

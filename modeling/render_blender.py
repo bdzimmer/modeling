@@ -169,7 +169,8 @@ def main(args):
     materials = config.get('materials')
     if materials is not None:
         if materials:
-            parent = msc.add_model(msc.ModelConfig(name='MATERIAL PREVIEWS', hide=True), None)
+            parent = msc.add_model(
+                msc.ModelConfig(name='MATERIAL PREVIEWS', type=msc.ModelTypes.EMPTY, hide=True), None)
             for material in materials:
 
                 # if there is no name field, it's expected that we
@@ -184,6 +185,7 @@ def main(args):
 
                 msc.add_model(msc.ModelConfig(
                     name=('MATERIAL PREVIEW - ' + material_name),
+                    type=msc.ModelTypes.MODEL,
                     filename='models/sphere.obj',
                     auto_smooth_angle=30.0,
                     material=material,
@@ -536,11 +538,13 @@ def add_compositor_nodes(scene: bpy.types.Scene):
 
 
 def parse_model(model: Dict) -> msc.ModelConfig:
+    """convert dict from json to ModelConfig"""
     model = dict(model)
     children = model.get('children')
     if children is not None:
         children = [parse_model(x) for x in children]
         model['children'] = children
+    print(model, flush=True)
     return msc.ModelConfig(**model)
 
 
