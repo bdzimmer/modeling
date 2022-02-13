@@ -7,9 +7,10 @@ Utilties for working with my own scene JSON format.
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
 import os
+import sys
 
 import math
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 
 import bpy
 from bpy import types as btypes
@@ -22,57 +23,162 @@ from modeling.blender import util as butil, materials
 PROFILER = profiler.Profiler()
 
 
-class ModelTypes:
-    """model types"""
-    MODEL = 'model'
-    INSTANCE = 'instance'
-    EMPTY = 'empty'
-    LIGHT = 'light'
+class ConfigTypes:
+    """constants"""
+    MODEL = 'ConfigModel'
+    INSTANCE = 'ConfigInstance'
+    EMPTY = 'ConfigEmpty'
+    LIGHT = 'ConfigLight'
 
 
-class ModelConfig:
+class ConfigObject:
     """model configuration"""
+
     def __init__(
             self,
             name: str,
-            type: str,
-            filename: Optional[str] = None,
-            copy: Optional[str] = None,
-            color: Optional[List] = None,
-            material: Optional[Dict] = None,
-            collection: Optional[str] = None,
-            info: Optional[Dict] = None,
-
             transformation: Optional[Dict] = None,
-            auto_smooth_angle: Optional[float] = None,
-            hide: Optional[bool] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
             props: Optional[List[Dict]] = None,
-            instance: Optional[str] = None,
-            children: Optional[List] = None):
+            children: Optional[List] = None
+            ):
         """constructor"""
 
         self.name = name
-        self.type = type
-        self.filename = filename
-        self.copy = copy
-        self.color = color
-        self.material = material
-        self.collection = collection
-        self.info = info
-
         self.transformation = transformation
-        self.auto_smooth_angle = auto_smooth_angle
+        self.collection = collection
         self.hide = hide
         self.props = props
-        self.instance = instance
         self.children = children
+
+
+class ConfigEmpty(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+
+# TODO: implement properly
+class ConfigLight(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+
+class ConfigModel(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None,
+
+            filename: Optional[str] = None,
+            color: Optional[List] = None,
+            material: Optional[Dict] = None,
+            auto_smooth_angle: Optional[float] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+        self.filename = filename
+        self.color = color
+        self.material = material
+
+        self.auto_smooth_angle = auto_smooth_angle
+        self.hide = hide
+
+
+class ConfigInstance(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None,
+
+            instance: Optional[str] = None,
+            color: Optional[List] = None,
+            material: Optional[Dict] = None,
+            auto_smooth_angle: Optional[float] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+        self.instance = instance
+        self.color = color
+        self.material = material
+
+        # TODO: this probably isn't necessary
+        self.auto_smooth_angle = auto_smooth_angle
 
 
 class ModelKeys:
     """keys for model dict"""
 
     NAME = 'name'              # name of model
-    TYPE = 'type'
+    CLASS = 'class'
     FILENAME = 'filename'      # filename to load, usually obj
     COPY = 'copy'              # name of other model to copy mesh data from
     COLOR = 'color'            # default / overall color for the model
@@ -164,7 +270,7 @@ DEFAULT_VIEW_LAYER = 'ViewLayer'
 
 
 def add_model(
-        model_config: ModelConfig,
+        model_config: ConfigObject,
         parent: Optional[bpy.types.Object]) -> Optional[bpy.types.Object]:
     """add a model to the blender scene"""
 
@@ -177,7 +283,7 @@ def add_model(
     collection_name = model_config.collection if model_config.collection is not None else DEFAULT_COLLECTION
     print('collection:', collection_name)
 
-    if model_config.type == ModelTypes.MODEL:
+    if isinstance(model_config, ConfigModel):
         # assumes .filename is defined
         if not model_config.filename.startswith('append'):
             print('importing', model_config.filename, flush=True)
@@ -209,7 +315,7 @@ def add_model(
             else:
                 return None
 
-    elif model_config.type == ModelTypes.INSTANCE:
+    elif isinstance(model_config, ConfigInstance):
         # assumes .instance is defined
         # TODO: get rid of instance field and use something from info
 
@@ -224,13 +330,13 @@ def add_model(
         else:
             print(f'object `{model_config.instance}` not found to instance')
 
-    elif model_config.type == ModelTypes.EMPTY:
+    elif isinstance(model_config, ConfigEmpty):
         print('creating an empty', flush=True)
         # create empty
         obj = bpy.data.objects.new(name, None)
         bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
 
-    elif model_config.type == ModelTypes.LIGHT:
+    elif isinstance(model_config, ConfigLight):
         print('lights not implemented yet', flush=True)
         return None
 
@@ -252,7 +358,8 @@ def add_model(
     if obj.data is not None:
 
         # enable smooth shading
-        auto_smooth_angle = model_config.auto_smooth_angle
+        # auto_smooth_angle = model_config/auto_smooth_angle
+        auto_smooth_angle = getattr(model_config, 'auto_smooth_angle', None)
         if auto_smooth_angle is not None:
             PROFILER.tick('add - other - smooth')
             obj.data.use_auto_smooth = True
@@ -300,9 +407,9 @@ def add_model(
         PROFILER.tock('add - other - hide')
 
     # move into appropriate collection
-    # TODO: probably not correct...does this need to work for instancing?
+    # TODO: probably not correct...I think this should work for instancing too
     if collection_name != DEFAULT_COLLECTION:
-        if model_config.type == ModelTypes.MODEL and not model_config.filename.startswith('append'):
+        if isinstance(model_config, ConfigModel) and not model_config.filename.startswith('append'):
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
             bpy.data.collections[collection_name].objects.link(obj)
@@ -320,7 +427,7 @@ def add_model(
 def add_material(
         mat: Dict,
         obj: btypes.Object,
-        model_config: Optional[ModelConfig]) -> Optional[btypes.Material]:
+        model_config: Optional[Union[ConfigModel, ConfigInstance]]) -> Optional[btypes.Material]:
 
     instance_dict = mat.get(MaterialKeys.INSTANCE)
     mat_python = mat.get(MaterialKeys.PYTHON)
@@ -608,3 +715,29 @@ def import_obj(filename) -> bpy.types.Object:
     PROFILER.tock('obj')
 
     return obj
+
+
+def parse_model(model: Dict) -> ConfigObject:
+    """convert dict from json to ModelConfig"""
+    model = dict(model)
+    children = model.get('children')
+    if children is not None:
+        children = [parse_model(x) for x in children]
+        model['children'] = children
+
+    print(model, flush=True)
+
+    model_class = model['class']
+    del model['class']
+
+    if model_class == ConfigTypes.MODEL:
+        return ConfigModel(**model)
+    elif model_class == ConfigTypes.INSTANCE:
+        return ConfigInstance(**model)
+    elif model_class == ConfigTypes.EMPTY:
+        return ConfigEmpty(**model)
+    elif model_class == ConfigTypes.LIGHT:
+        return ConfigLight(**model)
+    else:
+        print(f'invalid config class:', model_class)
+        sys.exit()

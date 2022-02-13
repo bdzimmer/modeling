@@ -11,7 +11,7 @@ import pickle
 import os
 import json
 import sys
-from typing import Optional, List, Dict
+from typing import Optional
 
 import bpy
 import bpy.types as btypes
@@ -24,7 +24,7 @@ if CODE_DIRNAME not in sys.path:
     sys.path.append(CODE_DIRNAME)
 
 from modeling.blender import util as butil, scene as msc, materials as ms
-from modeling.blender.scene import MaterialKeys as Mk
+from modeling.blender.scene import MaterialKeys as Mk, parse_model
 
 DO_RENDER = True
 
@@ -170,7 +170,7 @@ def main(args):
     if materials is not None:
         if materials:
             parent = msc.add_model(
-                msc.ModelConfig(name='MATERIAL PREVIEWS', type=msc.ModelTypes.EMPTY, hide=True), None)
+                msc.ConfigEmpty(name='MATERIAL PREVIEWS', hide=True), None)
             for material in materials:
 
                 # if there is no name field, it's expected that we
@@ -183,22 +183,23 @@ def main(args):
                         material[Mk.MATLIB][Mk.MATLIB_MAT_NAME]
                     )
 
-                msc.add_model(msc.ModelConfig(
-                    name=('MATERIAL PREVIEW - ' + material_name),
-                    type=msc.ModelTypes.MODEL,
-                    filename='models/sphere.obj',
-                    auto_smooth_angle=30.0,
-                    material=material,
-                    props=[
-                        {
-                            'type': 'blender:subsurface',
-                            'levels': 2,
-                            'render_levels': 4,
-                            'use_adaptive_subdivision': False
-                        }
-                    ],
-                    hide=True
-                ), parent)
+                msc.add_model(
+                    msc.ConfigModel(
+                        name=('MATERIAL PREVIEW - ' + material_name),
+                        filename='models/sphere.obj',
+                        auto_smooth_angle=30.0,
+                        material=material,
+                        props=[
+                            {
+                                'type': 'blender:subsurface',
+                                'levels': 2,
+                                'render_levels': 4,
+                                'use_adaptive_subdivision': False
+                            }
+                        ],
+                        hide=True
+                    ),
+                    parent)
 
     # ~~~~ special origin object
 
@@ -535,17 +536,6 @@ def add_compositor_nodes(scene: bpy.types.Scene):
         scene,
         links
     )
-
-
-def parse_model(model: Dict) -> msc.ModelConfig:
-    """convert dict from json to ModelConfig"""
-    model = dict(model)
-    children = model.get('children')
-    if children is not None:
-        children = [parse_model(x) for x in children]
-        model['children'] = children
-    print(model, flush=True)
-    return msc.ModelConfig(**model)
 
 
 main(butil.find_args(sys.argv))
