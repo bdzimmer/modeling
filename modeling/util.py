@@ -18,7 +18,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
 
-from symbols import transforms
 from modeling import view
 from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33
 
@@ -218,7 +217,7 @@ def points_around_circle(n_points: int, start: float, radius: float) -> List[Tup
 
 def ngon(n: int, start: float) -> Verts2D:
     """le sigh"""
-    return np.array(transforms.points_around_circle(n, start, 1))
+    return np.array(points_around_circle(n, start, 1))
 
 
 def rect_2d(width, height) -> Verts2D:
