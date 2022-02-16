@@ -18,17 +18,9 @@ import mathutils
 
 from modeling import profiler
 from modeling.blender import util as butil, materials
-
+from modeling.blender.types import ConfigTypes
 
 PROFILER = profiler.Profiler()
-
-
-class ConfigTypes:
-    """constants"""
-    MODEL = 'ConfigModel'
-    INSTANCE = 'ConfigInstance'
-    EMPTY = 'ConfigEmpty'
-    LIGHT = 'ConfigLight'
 
 
 class ConfigObject:
@@ -283,6 +275,8 @@ def add_model(
     collection_name = model_config.collection if model_config.collection is not None else DEFAULT_COLLECTION
     print('collection:', collection_name)
 
+    append_collection = False
+
     if isinstance(model_config, ConfigModel):
         # assumes .filename is defined
         if not model_config.filename.startswith('append'):
@@ -304,6 +298,7 @@ def add_model(
                 obj = bpy.context.object
                 obj.name = name
             elif directory == 'Collection':
+                append_collection = True
                 obj = butil.get_obj_by_name(name)
                 # print('collection object:', obj)
                 # move into appropriate collection
@@ -408,11 +403,10 @@ def add_model(
 
     # move into appropriate collection
     # TODO: probably not correct...I think this should work for instancing too
-    if collection_name != DEFAULT_COLLECTION:
-        if isinstance(model_config, ConfigModel) and not model_config.filename.startswith('append'):
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[collection_name].objects.link(obj)
+    if collection_name != DEFAULT_COLLECTION and not append_collection:
+        for coll in obj.users_collection:
+            coll.objects.unlink(obj)
+        bpy.data.collections[collection_name].objects.link(obj)
 
     # tock before recurse
     PROFILER.tock('add - other')

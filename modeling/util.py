@@ -202,6 +202,20 @@ def elongate(
 # ~~~~ 2D primitives ~~~~ ~~~~ ~~~~
 
 
+def circle_point(angle: float, radius: float) -> Tuple[float, float]:
+    """get a point on a circle"""
+    x_coord = radius * math.cos(angle)
+    y_coord = radius * math.sin(angle)
+    return x_coord, y_coord
+
+
+def points_around_circle(n_points: int, start: float, radius: float) -> List[Tuple[float, float]]:
+    """find a list of evenly space points around a circle"""
+    return [
+        circle_point(x * 1.0 * TAU / n_points + start, radius)
+        for x in range(n_points)]
+
+
 def ngon(n: int, start: float) -> Verts2D:
     """le sigh"""
     return np.array(transforms.points_around_circle(n, start, 1))
@@ -323,12 +337,23 @@ def plot_loop_2d(loop_verts):
     plt.show()
 
 
+def plot_points_2d(points):
+    """plot a 2d loop for debugging"""
+    plt.figure()
+    plt.axis('equal')
+    plt.scatter(
+        points[:, 0], points[:, 1],
+        color='blue')
+    plt.show()
+
+
 def mirror_x(mesh: Mesh) -> Mesh:
     """mirror mesh in x dimension (across y axis)"""
     return (
         mesh[0] * np.array([X_HAT_NEG]),
         mesh[1][:, [2, 1, 0]]
     )
+
 
 def mirror_y(mesh: Mesh) -> Mesh:
     """mirror mesh in y dimension"""
