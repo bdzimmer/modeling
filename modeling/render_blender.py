@@ -4,7 +4,7 @@ Use Blender to render a scene to one or more image files.
 
 """
 
-# Copyright (c) 2021 Ben Zimmer. All rights reserved.
+# Copyright (c) 2022 Ben Zimmer. All rights reserved.
 
 import math
 import pickle
@@ -16,12 +16,11 @@ from typing import Optional
 import bpy
 import bpy.types as btypes
 
-# TODO: there is probably a better way to find the script directory at runtime
 
-CODE_DIRNAME = '/home/ben/code/modeling'
+CODE_DIR_PATH = os.path.dirname(os.path.dirname(__file__))
 
-if CODE_DIRNAME not in sys.path:
-    sys.path.append(CODE_DIRNAME)
+if CODE_DIR_PATH not in sys.path:
+    sys.path.append(CODE_DIR_PATH)
 
 from modeling.blender import util as butil, scene as msc, materials as ms
 from modeling.blender.scene import MaterialKeys as Mk, parse_model

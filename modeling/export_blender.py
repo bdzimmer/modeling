@@ -4,21 +4,21 @@ Automate the export of a Blender project.
 
 """
 
-# Copyright (c) 2021 Ben Zimmer. All rights reserved.
+# Copyright (c) 2022 Ben Zimmer. All rights reserved.
 
 import json
+import os
 import sys
 
 import bpy
 from bpy.app.handlers import persistent
 
-# TODO: there is probably a way to find the script directory at runtime
-CODE_DIRNAME = '/home/ben/code/modeling'
+CODE_DIR_PATH = os.path.dirname(os.path.dirname(__file__))
 
-if CODE_DIRNAME not in sys.path:
-    sys.path.append(CODE_DIRNAME)
+if CODE_DIR_PATH not in sys.path:
+    sys.path.append(CODE_DIR_PATH)
 
-from modeling import blender
+from modeling.blender import util as butil
 
 DO_RENDER = True
 DO_QUIT = True
@@ -27,11 +27,10 @@ DO_QUIT = True
 def main(args):
     """main program"""
 
-    blender.disable_splash()
+    butil.disable_splash()
 
     input_filename = args[0]
     output_filename = args[1]
-    # output_filename_prefix = os.path.splitext(output_filename)[0]
 
     print('input filename: ', input_filename)
     print('output filename:', output_filename)
@@ -67,7 +66,7 @@ def main(args):
             axis_up='Z')
 
         if DO_QUIT:
-            blender.quit()
+            butil.quit()
 
     # set up handler to run after the project is loaded
     bpy.app.handlers.load_post.append(load_handler)
@@ -77,4 +76,4 @@ def main(args):
     bpy.ops.wm.open_mainfile(filepath=config['input_filename'])
 
 
-main(blender.find_args(sys.argv))
+main(butil.find_args(sys.argv))
