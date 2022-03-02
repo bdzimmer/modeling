@@ -14,7 +14,7 @@ def view(mesh, material):
     """view a single mesh with nice default settings"""
     scene = pyrender.Scene()
     if isinstance(mesh, tuple):
-        mesh = trimesh.Trimesh(*mesh)
+        mesh = trimesh.Trimesh(*mesh, process=False)
 
     print(f'vertices: {mesh.vertices.shape[0]} faces: {mesh.faces.shape[0]}')
 
