@@ -568,5 +568,6 @@ def remove_bad_faces(faces: np.ndarray) -> np.ndarray:
 
 def process(mesh: Mesh) -> Mesh:
     """use trimesh's process"""
-    mesh_tm = trimesh.Trimesh(mesh[0], mesh[1], process=True)
+    # NOTE: validate=True added 2022-03-15
+    mesh_tm = trimesh.Trimesh(mesh[0], mesh[1], process=True, validate=True)
     return mesh_tm.vertices, mesh_tm.faces
