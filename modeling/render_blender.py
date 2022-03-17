@@ -23,7 +23,10 @@ if CODE_DIR_PATH not in sys.path:
     sys.path.append(CODE_DIR_PATH)
 
 from modeling.blender import util as butil, scene as msc, materials as ms
-from modeling.blender.scene import MaterialKeys as Mk, parse_model
+from modeling.blender.scene import parse_model
+from modeling.blender.types import MaterialKeys as Mk
+from modeling.blender import types
+
 
 DO_RENDER = True
 
@@ -169,7 +172,7 @@ def main(args):
     if materials is not None:
         if materials:
             parent = msc.add_model(
-                msc.ConfigEmpty(name='MATERIAL PREVIEWS', hide=True), None)
+                types.ConfigEmpty(name='MATERIAL PREVIEWS', hide=True), None)
             for material in materials:
 
                 # if there is no name field, it's expected that we
@@ -183,7 +186,7 @@ def main(args):
                     )
 
                 msc.add_model(
-                    msc.ConfigModel(
+                    types.ConfigModel(
                         name=('MATERIAL PREVIEW - ' + material_name),
                         filename='models/sphere.obj',
                         auto_smooth_angle=30.0,
@@ -266,7 +269,7 @@ def main(args):
 
         msc.set_transformation(light_obj, light['transformation'])
 
-        collection_name = light.get(msc.ModelKeys.COLLECTION, msc.DEFAULT_COLLECTION)
+        collection_name = light.get(types.ModelKeys.COLLECTION, msc.DEFAULT_COLLECTION)
         if collection_name != msc.DEFAULT_COLLECTION:
             for coll in light_obj.users_collection:
                 coll.objects.unlink(light_obj)
