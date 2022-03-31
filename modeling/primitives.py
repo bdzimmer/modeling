@@ -13,7 +13,6 @@ from modeling.types import Mesh, vec3
 from modeling import util, solid
 
 
-
 def icosphere(subdivisions: int, radius: float) -> Mesh:
     """icosphere"""
     mesh_tm = tm.primitives.creation.icosphere(subdivisions, radius, None)
@@ -61,7 +60,6 @@ def uv_capsule(
 
     center_ring = np.array(util.points_around_circle(segs, 0.0, radius))
 
-    print()
     ribs = []
     for idx, (y, x) in enumerate(yx):
 
