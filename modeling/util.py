@@ -19,8 +19,7 @@ import numpy as np
 import pyrender
 
 from modeling import view
-from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33
-
+from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33, Point3
 
 X_HAT = np.array([1.0, 0.0, 0.0])
 Y_HAT = np.array([0.0, 1.0, 0.0])
@@ -571,3 +570,12 @@ def process(mesh: Mesh) -> Mesh:
     # NOTE: validate=True added 2022-03-15
     mesh_tm = trimesh.Trimesh(mesh[0], mesh[1], process=True, validate=True)
     return mesh_tm.vertices, mesh_tm.faces
+
+
+def point_mesh(point: Point3) -> Mesh:
+    """create a mesh from a single point"""
+    point = np.array(point, dtype=np.float)
+    verts = np.array([point])
+    faces = np.zeros((0, 3), dtype=np.int)
+    mesh = (verts, faces)
+    return mesh

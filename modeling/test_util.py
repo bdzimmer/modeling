@@ -6,7 +6,7 @@ Unit tests for modeling utilities.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
-from modeling import util, components
+from modeling import util, primitives
 from modeling.types import vec3
 
 
@@ -16,7 +16,7 @@ def test_union():
     # all of this works with trimesh 3.2.2
 
     # no redundant points
-    mesh = components.cylinder(4.0, 1.0, 8)
+    mesh = primitives.uv_sphere(4.0, 8, 8)
     mesh_2 = util.translate_mesh(mesh, vec3(0.5, 0, 0))
 
     # concat / union meshes together
@@ -30,3 +30,5 @@ def test_union():
     # util.view_mesh(mesh_c)
     # util.view_mesh(mesh_u)
     # util.view_mesh(mesh_u_self)
+
+    # TODO: add assertions
