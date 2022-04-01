@@ -9,6 +9,7 @@ from typing import Tuple
 import numpy as np
 import trimesh as tm
 
+from modeling.solid import surface_revolution
 from modeling.types import Mesh, vec3
 from modeling import util, solid
 
@@ -100,3 +101,33 @@ def uv_capsule(
         vec3(0, radius + cyl_length / 2, 0),
         vec3(0, -radius - cyl_length / 2, 0)
     )
+
+
+def cylinder(length: float, radius: float, subdivisions: int) -> Mesh:
+    """cylinder with closed caps"""
+
+    half_length = length / 2.0
+
+    outline = np.array([
+        [radius, -half_length],
+        [radius, half_length]
+    ])
+
+    curve_verts, curve_faces = surface_revolution(
+        outline, np.pi * 2.0, True, False, subdivisions)
+
+    center_0 = np.array([[0.0, -half_length, 0.0]])
+    center_1 = np.array([[0.0, half_length, 0.0]])
+
+    center_0_idx = curve_verts.shape[0]
+    center_1_idx = curve_verts.shape[0] + 1
+
+    cap_0_idxs = range(0, subdivisions * 2, 2)
+    cap_1_idxs = range(1, subdivisions * 2, 2)
+
+    cap_0_faces = solid.close_face_loop(cap_0_idxs, center_0_idx)
+    cap_1_faces = solid.close_face_loop(cap_1_idxs[::-1], center_1_idx)
+
+    return (
+        np.concatenate((curve_verts, center_0, center_1), axis=0),
+        np.concatenate((curve_faces, cap_0_faces, cap_1_faces), axis=0))

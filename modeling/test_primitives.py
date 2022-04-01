@@ -3,7 +3,7 @@ Tests for primitives.
 """
 
 # Copyright (c) 2022 Ben Zimmer. All rights reserved.
-
+import modeling.primitives
 from modeling import util, primitives
 from modeling.types import vec3
 
@@ -50,3 +50,15 @@ def test_uv_capsule():
 
     # 8, 6
     assert mesh_d[0].shape[0] == 8 * 4 + 8 * 2 + 2
+
+
+def test_cylinder():
+    """test cylinder"""
+    subdivisions = 16
+    mesh = modeling.primitives.cylinder(1.0, 1.0, subdivisions)
+
+    if DEBUG:
+        util.view_mesh(mesh)
+
+    assert mesh[0].shape[0] == subdivisions * 2 + 2  # two loops plus end points
+    assert mesh[1].shape[0] == subdivisions * 2 + subdivisions * 2  # center plus ends

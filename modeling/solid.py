@@ -286,3 +286,59 @@ def close_face_noloop(idxs_points: List[int], idx_center: int) -> Faces:
         faces_list.append((idx_center, idx_vert_a, idx_vert_b))
 
     return np.vstack(faces_list)
+
+
+def surface_revolution(
+        xy_points: np.ndarray,
+        angle: float,
+        close_rev: bool,
+        close_fn: bool,
+        subdivisions: int) -> Mesh:
+
+    """create a surface of revolution by rotating xy points around the y axis"""
+
+    # TODO: handle zero points properly without duplicating them
+
+    # pylint: disable=too-many-locals
+
+    # for now, only the y axis
+    # y axis remains fixed, x is modified and z is added
+    n_points = xy_points.shape[0]
+
+    # add points for the final subdivision if isn't a full revolution
+    max_sub = subdivisions + 1 if angle < (np.pi * 2.0) else subdivisions
+
+    # for now, just lay them out in a line
+    points_list = []
+
+    for x_val in range(0, max_sub):
+        theta = angle * x_val / subdivisions
+        x_dim = xy_points[:, 0] * np.cos(theta)
+        y_dim = xy_points[:, 1]
+        z_dim = xy_points[:, 0] * np.sin(theta)
+
+        points_list.append(
+            np.column_stack((x_dim, y_dim, z_dim)))
+
+    # connect corresponding pairs of points with a face
+    faces_list = []
+
+    idxs_sub = list(range(0, max_sub))
+    if close_rev:
+        idxs_sub.append(0)
+    idxs_vert = list(range(0, n_points))
+    if close_fn:
+        idxs_vert.append(0)
+
+    for idx_sub_a, idx_sub_b in zip(idxs_sub[:-1], idxs_sub[1:]):
+        for idx_vert_a, idx_vert_b in zip(idxs_vert[:-1], idxs_vert[1:]):
+            offset_a = idx_sub_a * n_points
+            offset_b = idx_sub_b * n_points
+            faces_list.append(
+                [offset_a + idx_vert_a, offset_a + idx_vert_b, offset_b + idx_vert_a])
+            faces_list.append(
+                [offset_b + idx_vert_a, offset_a + idx_vert_b, offset_b + idx_vert_b])
+
+    # TODO: some degenerate faces are produced here I think
+
+    return np.vstack(points_list), np.vstack(faces_list)
