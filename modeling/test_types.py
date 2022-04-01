@@ -21,3 +21,4 @@ def test_types():
     assert isinstance(faces, types.Faces)
 
     assert isinstance(types.vec3(1, 2, 3), np.ndarray)
+    assert isinstance(types.vec(1, 2, 3, 4, 5), np.ndarray)
