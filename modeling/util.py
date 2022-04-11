@@ -19,7 +19,7 @@ import numpy as np
 import pyrender
 
 from modeling import view
-from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33, Point3
+from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33, Point3, AABB
 
 X_HAT = np.array([1.0, 0.0, 0.0])
 Y_HAT = np.array([0.0, 1.0, 0.0])
@@ -579,3 +579,20 @@ def point_mesh(point: Point3) -> Mesh:
     faces = np.zeros((0, 3), dtype=np.int)
     mesh = (verts, faces)
     return mesh
+
+
+def verts_bounds(verts: Verts) -> AABB:
+    """find verts AABB"""
+    return np.concatenate([
+        np.min(verts, axis=0, keepdims=True),
+        np.max(verts, axis=0, keepdims=True)], axis=0)
+
+
+def mesh_bounds(mesh: Mesh) -> AABB:
+    """find mesh AABB, for convenience"""
+    return verts_bounds(mesh[0])
+
+
+def bounds_overlap(bounds_0: AABB, bounds_1: AABB) -> bool:
+    """check overlap of two AABBs"""
+    return np.all(np.logical_and(bounds_0[0, :] < bounds_1[1, :], bounds_0[1, :] > bounds_1[0, :]))

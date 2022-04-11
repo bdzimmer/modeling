@@ -10,6 +10,10 @@ from typing import Tuple, List, Union
 
 import numpy as np
 
+
+Point2 = Union[np.ndarray, Tuple[float, float]]
+Vec2 = Union[np.ndarray, Tuple[float, float, float]]
+
 Point3 = Union[np.ndarray, Tuple[float, float, float]]
 Vec3 = Union[np.ndarray, Tuple[float, float, float]]
 
@@ -25,9 +29,11 @@ Mesh = Tuple[Verts, Faces]
 # a new mesh with indices of new vertices and new faces
 MeshExtended = Tuple[Mesh, List[int], List[int]]
 
-
 Mat33 = np.ndarray  # (3 x 3)
 Mat44 = np.ndarray  # (4 x 4)
+
+
+AABB = np.ndarray  # (3 x 2) minimum and maximum
 
 
 # some shorthand for numpy array creation
