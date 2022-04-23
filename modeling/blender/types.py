@@ -13,6 +13,8 @@ class ConfigTypes:
     INSTANCE = 'ConfigInstance'
     EMPTY = 'ConfigEmpty'
     LIGHT = 'ConfigLight'
+    ARMATURE = 'ConfigArmature'
+    BONE = 'ConfigBone'
 
 
 class ConfigObject:
@@ -157,6 +159,65 @@ class ConfigInstance(ConfigObject):
 
         # TODO: this probably isn't necessary
         self.auto_smooth_angle = auto_smooth_angle
+
+
+class ConfigArmature(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+
+class ConfigBone(ConfigObject):
+    """model configuration"""
+
+    def __init__(
+            self,
+            name: str,
+
+            head: List[float],
+            tail: List[float],
+            roll: float,
+            child: Optional[str],
+
+            transformation: Optional[Dict] = None,
+            collection: Optional[str] = None,
+            hide: bool = False,
+            props: Optional[List[Dict]] = None,
+            children: Optional[List] = None
+            ):
+        """constructor"""
+
+        super().__init__(
+            name=name,
+            transformation=transformation,
+            collection=collection,
+            hide=hide,
+            props=props,
+            children=children
+        )
+
+        self.head = head
+        self.tail = tail
+        self.roll = roll
+        self.child = child
 
 
 class ModelKeys:

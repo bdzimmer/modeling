@@ -18,7 +18,9 @@ import mathutils
 
 from modeling import profiler
 from modeling.blender import util as butil, materials
-from modeling.blender.types import ConfigTypes, ConfigObject, ConfigEmpty, ConfigLight, ConfigModel, ConfigInstance, \
+from modeling.blender.types import \
+    ConfigTypes, ConfigObject, ConfigEmpty, ConfigLight, ConfigModel, ConfigInstance, \
+    ConfigArmature, ConfigBone, \
     PropsKeys, TransformationKeys, MaterialKeys
 
 
@@ -103,11 +105,29 @@ def add_model(
         print('lights not implemented yet', flush=True)
         return None
 
+    elif isinstance(model_config, ConfigArmature):
+        obj = bpy.data.objects.new(name, bpy.data.armatures.new('arm_' + name))
+        obj.show_in_front = True
+        # obj.data.show_names = True
+        bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
+
+    elif isinstance(model_config, ConfigBone):
+        print('bone parent:', parent)
+        bpy.context.view_layer.objects.active = parent
+        bpy.ops.object.editmode_toggle()
+        arm: btypes.Armature = parent.data
+        obj = arm.edit_bones.new(model_config.name)
+        obj.head = model_config.head
+        obj.tail = model_config.tail
+        obj.roll = model_config.roll
+        # TODO: add child
+        bpy.ops.object.editmode_toggle()
+
     PROFILER.tock('add - load / instance / copy')
 
     PROFILER.tick('add - other')
 
-    if parent is not None:
+    if parent is not None and not isinstance(model_config, ConfigBone):
         PROFILER.tick('add - other - parent')
         obj.parent = parent
         PROFILER.tock('add - other - parent')
@@ -118,8 +138,7 @@ def add_model(
         set_transformation(obj, transformation)
         PROFILER.tock('add - other - transformation')
 
-    if obj.data is not None:
-
+    if not isinstance(model_config, (ConfigArmature, ConfigBone)) and obj.data is not None:
         # enable smooth shading
         # auto_smooth_angle = model_config/auto_smooth_angle
         auto_smooth_angle = getattr(model_config, 'auto_smooth_angle', None)
@@ -169,7 +188,7 @@ def add_model(
         obj.hide_render = True
         PROFILER.tock('add - other - hide')
 
-    # move into appropriate collection
+    # move into appropriate collection and link
     # TODO: probably not correct...I think this should work for instancing too
     if collection_name != DEFAULT_COLLECTION and not append_collection:
         for coll in obj.users_collection:
@@ -500,6 +519,10 @@ def parse_model(model: Dict) -> ConfigObject:
         return ConfigEmpty(**model)
     elif model_class == ConfigTypes.LIGHT:
         return ConfigLight(**model)
+    elif model_class == ConfigTypes.ARMATURE:
+        return ConfigArmature(**model)
+    elif model_class == ConfigTypes.BONE:
+        return ConfigBone(**model)
     else:
         print(f'invalid config class:', model_class)
         sys.exit()
