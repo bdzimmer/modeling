@@ -195,7 +195,9 @@ class ConfigBone(ConfigObject):
             head: List[float],
             tail: List[float],
             roll: float,
-            child: Optional[str],
+            parent_bone_name: Optional[str],  # parent bone
+            connect: bool,                    # whether or not to directly connect
+            child_mesh_name: Optional[str],   # child mesh
 
             transformation: Optional[Dict] = None,
             collection: Optional[str] = None,
@@ -217,7 +219,9 @@ class ConfigBone(ConfigObject):
         self.head = head
         self.tail = tail
         self.roll = roll
-        self.child = child
+        self.parent_bone_name = parent_bone_name
+        self.connect = connect
+        self.child_mesh_name = child_mesh_name
 
 
 class ModelKeys:

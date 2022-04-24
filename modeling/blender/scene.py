@@ -112,16 +112,44 @@ def add_model(
         bpy.data.collections[DEFAULT_COLLECTION].objects.link(obj)
 
     elif isinstance(model_config, ConfigBone):
-        print('bone parent:', parent)
+        print('bone:', model_config.name)
+        print('armature parent:', parent)
+        print('bone parent:', model_config.parent_bone_name)
+        print('child mesh:', model_config.child_mesh_name)
+        obj = None
         bpy.context.view_layer.objects.active = parent
         bpy.ops.object.editmode_toggle()
         arm: btypes.Armature = parent.data
-        obj = arm.edit_bones.new(model_config.name)
-        obj.head = model_config.head
-        obj.tail = model_config.tail
-        obj.roll = model_config.roll
-        # TODO: add child
+        bone = arm.edit_bones.new(model_config.name)
+        bone.roll = model_config.roll
+        if model_config.connect:
+            bone.use_connect = True
+        bone.head = model_config.head
+        bone.tail = model_config.tail
+        if model_config.parent_bone_name is not None:
+            parent_bone = arm.edit_bones[model_config.parent_bone_name]
+            bone.parent = parent_bone
         bpy.ops.object.editmode_toggle()
+
+        if model_config.child_mesh_name is not None:
+
+            # select bone in armature in edit mode
+            bpy.ops.object.mode_set(mode='EDIT')
+            arm.edit_bones.active = arm.edit_bones[model_config.name]
+
+            # select child mesh and armature in object mode
+            bpy.ops.object.mode_set(mode='OBJECT')
+            child = butil.get_obj_by_name(model_config.child_mesh_name)
+
+            # deselect all objects then select child and parent, making sure the
+            # parent is active
+            bpy.ops.object.select_all(action='DESELECT')
+            child.select_set(True)
+            parent.select_set(True)
+            bpy.context.view_layer.objects.active = parent
+            bpy.ops.object.parent_set(type='BONE', keep_transform=True)
+
+            bpy.ops.object.select_all(action='DESELECT')
 
     PROFILER.tock('add - load / instance / copy')
 
