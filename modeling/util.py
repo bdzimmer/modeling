@@ -596,3 +596,9 @@ def mesh_bounds(mesh: Mesh) -> AABB:
 def bounds_overlap(bounds_0: AABB, bounds_1: AABB) -> bool:
     """check overlap of two AABBs"""
     return np.all(np.logical_and(bounds_0[0, :] < bounds_1[1, :], bounds_0[1, :] > bounds_1[0, :]))
+
+
+def autosmooth(mesh: Mesh, angle: float) -> Mesh:
+    """a wrapper around trimeshes autosmooth-like functionality"""
+    smoothed_tm = tm(*mesh).smoothed(angle=angle)
+    return smoothed_tm.vertices, smoothed_tm.faces
