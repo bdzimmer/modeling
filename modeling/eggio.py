@@ -45,7 +45,7 @@ def find_vertex_normals(mesh: Mesh, auto_smooth_angle: float) -> Tuple[Mesh, np.
     face_count_after = faces.shape[0]
 
     print(
-        'autosmooth:',
+        '\tautosmooth:',
         f'{vert_count_before}, {face_count_before} -> {vert_count_after}, {face_count_after}')
 
     return (verts, faces), vert_normals
