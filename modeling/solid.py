@@ -10,7 +10,7 @@ from typing import List, Tuple, Optional, Callable, Union
 
 import numpy as np
 
-from modeling.types import Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended
+from modeling.types import Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3
 
 from modeling import util
 from modeling.util import attach_y
@@ -342,3 +342,29 @@ def surface_revolution(
     # TODO: some degenerate faces are produced here I think
 
     return np.vstack(points_list), np.vstack(faces_list)
+
+
+def solid_from_cuts(
+        dims: Vec3,
+        planes: List[Tuple[Point3, Vec3]]
+        ) -> Mesh:
+    """create a solid from cuboid and a bunch of cutting planes"""
+
+    from modeling import primitives
+    import trimesh.geometry
+
+    cutter_scale = 2.5
+    mesh = primitives.box_mesh(*dims)
+
+    max_dim = max(dims) * cutter_scale
+    cutter = primitives.box_mesh(max_dim, max_dim, max_dim)
+    cutter = util.translate_mesh(cutter, vec3(0, 0, max_dim / 2))
+
+    for pos, normal in planes:
+        normal = normal / np.linalg.norm(normal)
+        rot = trimesh.geometry.align_vectors(vec3(0, 0, 1), normal)[0:3, 0:3]
+        cutter_transf = util.rotate_mesh(cutter, rot)
+        cutter_transf = util.translate_mesh(cutter_transf, pos)
+        mesh = util.difference([mesh, cutter_transf])
+
+    return mesh

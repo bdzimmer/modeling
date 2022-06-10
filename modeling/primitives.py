@@ -3,7 +3,7 @@ Various primitives, including wrappers around trimesh primitives.
 """
 
 # Copyright (c) 2022 Ben Zimmer. All rights reserved.
-
+import trimesh
 from typing import Tuple
 
 import numpy as np
@@ -131,3 +131,11 @@ def cylinder(length: float, radius: float, subdivisions: int) -> Mesh:
     return (
         np.concatenate((curve_verts, center_0, center_1), axis=0),
         np.concatenate((curve_faces, cap_0_faces, cap_1_faces), axis=0))
+
+
+def box_mesh(x_extent: float, y_extent: float, z_extent: float) -> Mesh:
+    """create a box mesh"""
+    # wrapper around trimesh interface
+    # TODO: my own implementation of this would be nice
+    box = trimesh.primitives.Box(extents=(x_extent, y_extent, z_extent)).to_mesh()
+    return box.vertices, box.faces
