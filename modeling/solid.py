@@ -347,7 +347,7 @@ def surface_revolution(
 def solid_from_cuts(
         dims: Vec3,
         planes: List[Tuple[Point3, Vec3]]
-        ) -> Mesh:
+        ) -> Tuple[Mesh, List[Mesh]]:
     """create a solid from cuboid and a bunch of cutting planes"""
 
     from modeling import primitives
@@ -360,11 +360,22 @@ def solid_from_cuts(
     cutter = primitives.box_mesh(max_dim, max_dim, max_dim)
     cutter = util.translate_mesh(cutter, vec3(0, 0, max_dim / 2))
 
+    cutter_vis = util.scale_mesh(cutter, vec3(1, 1, 0.01))
+
+    cutters = []
+
     for pos, normal in planes:
         normal = normal / np.linalg.norm(normal)
         rot = trimesh.geometry.align_vectors(vec3(0, 0, 1), normal)[0:3, 0:3]
+
+        # do the cutting
         cutter_transf = util.rotate_mesh(cutter, rot)
         cutter_transf = util.translate_mesh(cutter_transf, pos)
         mesh = util.difference([mesh, cutter_transf])
 
-    return mesh
+        # add a scaled version of the cutter for viewing purposes
+        cutter_transf = util.rotate_mesh(cutter_vis, rot)
+        cutter_transf = util.translate_mesh(cutter_transf, pos)
+        cutters.append(cutter_transf)
+
+    return mesh, cutters
