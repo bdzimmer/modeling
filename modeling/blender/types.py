@@ -257,6 +257,9 @@ class PropsKeys:
 
     VALUE = 'value'
 
+    AUTO_SMOOTH_ANGLE = 'auto_smooth_angle'
+    AUTO_SMOOTH_ANGLE_VALUE = 'value'
+
     BLENDER_TRIS_TO_QUADS = 'blender:tris_to_quads'
 
     BLENDER_WIREFRAME = 'blender:wireframe'

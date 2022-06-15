@@ -169,13 +169,15 @@ def add_model(
     if not isinstance(model_config, (ConfigArmature, ConfigBone)) and obj.data is not None:
         # enable smooth shading
         # auto_smooth_angle = model_config/auto_smooth_angle
-        auto_smooth_angle = getattr(model_config, 'auto_smooth_angle', None)
-        if auto_smooth_angle is not None:
-            PROFILER.tick('add - other - smooth')
-            obj.data.use_auto_smooth = True
-            obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
-            bpy.ops.object.shade_smooth()
-            PROFILER.tock('add - other - smooth')
+
+        # old auto smoothing method...this should be replaced
+        # auto_smooth_angle = getattr(model_config, 'auto_smooth_angle', None)
+        # if auto_smooth_angle is not None:
+        #     PROFILER.tick('add - other - smooth')
+        #     obj.data.use_auto_smooth = True
+        #     obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
+        #     bpy.ops.object.shade_smooth()
+        #     PROFILER.tock('add - other - smooth')
 
         mat = model_config.material
 
@@ -205,6 +207,7 @@ def add_model(
     if model_config.props is not None:
         PROFILER.tick('add - other - properties')
         for prop in model_config.props:
+            print('prop:', prop['type'])
             set_prop(obj, prop)
         PROFILER.tock('add - other - properties')
 
@@ -360,7 +363,19 @@ def set_prop(
         print(f'property `{prop_type}` not allowed for empty')
         return
 
-    if prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
+    if prop_type == PropsKeys.AUTO_SMOOTH_ANGLE:
+        # this doesn't work, we need to use select which also does select_set
+        # bpy.context.view_layer.objects.active = obj
+        butil.select(obj)
+        auto_smooth_angle = prop_dict[PropsKeys.AUTO_SMOOTH_ANGLE_VALUE]
+        obj.data.use_auto_smooth = True
+        obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
+        # print('\tshade smooth')
+        res = bpy.ops.object.shade_smooth(),
+        # print(res, obj.select_get())
+        # print('\tdone')
+
+    elif prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.tris_convert_to_quads()
