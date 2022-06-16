@@ -371,9 +371,10 @@ def set_prop(
         obj.data.use_auto_smooth = True
         obj.data.auto_smooth_angle = auto_smooth_angle * math.pi / 180.0
         # print('\tshade smooth')
-        res = bpy.ops.object.shade_smooth(),
+        res = bpy.ops.object.shade_smooth()
         # print(res, obj.select_get())
         # print('\tdone')
+        butil.select_none()
 
     elif prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
