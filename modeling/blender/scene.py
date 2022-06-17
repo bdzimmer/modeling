@@ -30,6 +30,8 @@ PROFILER = profiler.Profiler()
 DEFAULT_COLLECTION = 'Collection'
 DEFAULT_VIEW_LAYER = 'ViewLayer'
 
+TRIS_TO_QUADS_FACE_THRESH = 0.001
+
 
 def add_model(
         model_config: ConfigObject,
@@ -379,7 +381,7 @@ def set_prop(
     elif prop_type == PropsKeys.BLENDER_TRIS_TO_QUADS:
         bpy.context.view_layer.objects.active = obj
         bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.tris_convert_to_quads()
+        bpy.ops.mesh.tris_convert_to_quads(face_threshold=TRIS_TO_QUADS_FACE_THRESH)
         bpy.ops.object.editmode_toggle()
 
     elif prop_type == PropsKeys.BLENDER_WIREFRAME:
