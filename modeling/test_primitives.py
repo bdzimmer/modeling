@@ -3,8 +3,8 @@ Tests for primitives.
 """
 
 # Copyright (c) 2022 Ben Zimmer. All rights reserved.
-import modeling.primitives
-from modeling import util, primitives
+
+from modeling import util, primitives, ops
 from modeling.types import vec3
 
 DEBUG = False
@@ -32,10 +32,10 @@ def test_uv_capsule():
     if DEBUG:
         util.view_mesh(
             util.concat([
-                util.translate_mesh(mesh_a, vec3(-4.5, 0, 0)),
-                util.translate_mesh(mesh_b, vec3(-1.5, 0, 0)),
-                util.translate_mesh(mesh_c, vec3(1.5, 0, 0)),
-                util.translate_mesh(mesh_d, vec3(4.5, 0, 0)),
+                ops.translate_mesh(mesh_a, vec3(-4.5, 0, 0)),
+                ops.translate_mesh(mesh_b, vec3(-1.5, 0, 0)),
+                ops.translate_mesh(mesh_c, vec3(1.5, 0, 0)),
+                ops.translate_mesh(mesh_d, vec3(4.5, 0, 0)),
             ])
         )
 
@@ -55,7 +55,7 @@ def test_uv_capsule():
 def test_cylinder():
     """test cylinder"""
     subdivisions = 16
-    mesh = modeling.primitives.cylinder(1.0, 1.0, subdivisions)
+    mesh = primitives.cylinder(1.0, 1.0, subdivisions)
 
     if DEBUG:
         util.view_mesh(mesh)

@@ -6,7 +6,7 @@ Unit tests for modeling utilities.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
-from modeling import util, primitives
+from modeling import util, primitives, ops
 from modeling.types import vec3
 
 
@@ -17,7 +17,7 @@ def test_union():
 
     # no redundant points
     mesh = primitives.uv_sphere(4.0, 8, 8)
-    mesh_2 = util.translate_mesh(mesh, vec3(0.5, 0, 0))
+    mesh_2 = ops.translate_mesh(mesh, vec3(0.5, 0, 0))
 
     # concat / union meshes together
     mesh_c = util.concat([mesh, mesh_2])

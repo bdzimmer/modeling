@@ -9,10 +9,13 @@ from modeling.types import vec3
 from modeling import util, solid
 
 
+DEBUG_VISUALIZE = False
+
+
 def test_solid_from_cuts():
     """test solid_from_cuts"""
 
-    mesh = solid.solid_from_cuts(
+    mesh, cutters = solid.solid_from_cuts(
         vec3(2, 2, 2),
         [
             (vec3(0.5, 0.5, 0.5), vec3(1, 0.4, 1)),
@@ -20,4 +23,7 @@ def test_solid_from_cuts():
         ]
     )
 
-    util.view_mesh(mesh)
+    assert len(cutters) == 2
+
+    if DEBUG_VISUALIZE:
+        util.view_mesh(mesh)

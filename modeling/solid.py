@@ -10,9 +10,8 @@ from typing import List, Tuple, Optional, Callable, Union
 
 import numpy as np
 
+from modeling import util, ops
 from modeling.types import Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3
-
-from modeling import util
 from modeling.util import attach_y
 
 
@@ -358,9 +357,9 @@ def solid_from_cuts(
 
     max_dim = max(dims) * cutter_scale
     cutter = primitives.box_mesh(max_dim, max_dim, max_dim)
-    cutter = util.translate_mesh(cutter, vec3(0, 0, max_dim / 2))
+    cutter = ops.translate_mesh(cutter, vec3(0, 0, max_dim / 2))
 
-    cutter_vis = util.scale_mesh(cutter, vec3(1, 1, 0.01))
+    cutter_vis = ops.scale_mesh(cutter, vec3(1, 1, 0.01))
 
     cutters = []
 
@@ -369,13 +368,13 @@ def solid_from_cuts(
         rot = trimesh.geometry.align_vectors(vec3(0, 0, 1), normal)[0:3, 0:3]
 
         # do the cutting
-        cutter_transf = util.rotate_mesh(cutter, rot)
-        cutter_transf = util.translate_mesh(cutter_transf, pos)
+        cutter_transf = ops.rotate_mesh(cutter, rot)
+        cutter_transf = ops.translate_mesh(cutter_transf, pos)
         mesh = util.difference([mesh, cutter_transf])
 
         # add a scaled version of the cutter for viewing purposes
-        cutter_transf = util.rotate_mesh(cutter_vis, rot)
-        cutter_transf = util.translate_mesh(cutter_transf, pos)
+        cutter_transf = ops.rotate_mesh(cutter_vis, rot)
+        cutter_transf = ops.translate_mesh(cutter_transf, pos)
         cutters.append(cutter_transf)
 
     return mesh, cutters

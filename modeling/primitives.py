@@ -9,9 +9,8 @@ from typing import Tuple
 import numpy as np
 import trimesh as tm
 
-from modeling.solid import surface_revolution
 from modeling.types import Mesh, vec3
-from modeling import util, solid
+from modeling import util, solid, ops
 
 
 def icosphere(subdivisions: int, radius: float) -> Mesh:
@@ -31,7 +30,7 @@ def uv_sphere(radius: float, segs: int, rings: int) -> Mesh:
 
     yx = [
         util.circle_point(x, radius)
-        for x in np.linspace(0, util.TAU / 2, rings + 1)[1:-1]
+        for x in np.linspace(0, ops.TAU / 2, rings + 1)[1:-1]
     ]
 
     ribs = []
@@ -56,7 +55,7 @@ def uv_capsule(
 
     yx = [
         util.circle_point(x, radius)
-        for x in np.linspace(0, util.TAU / 2, rings + 1)[1:-1]
+        for x in np.linspace(0, ops.TAU / 2, rings + 1)[1:-1]
     ]
 
     center_ring = np.array(util.points_around_circle(segs, 0.0, radius))
@@ -113,7 +112,7 @@ def cylinder(length: float, radius: float, subdivisions: int) -> Mesh:
         [radius, half_length]
     ])
 
-    curve_verts, curve_faces = surface_revolution(
+    curve_verts, curve_faces = solid.surface_revolution(
         outline, np.pi * 2.0, True, False, subdivisions)
 
     center_0 = np.array([[0.0, -half_length, 0.0]])

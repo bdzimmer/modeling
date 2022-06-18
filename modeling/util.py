@@ -18,19 +18,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pyrender
 
-from modeling import view
-from modeling.types import Mesh, Vec3, Verts, Verts2D, Mat33, Point3, AABB
-
-X_HAT = np.array([1.0, 0.0, 0.0])
-Y_HAT = np.array([0.0, 1.0, 0.0])
-Z_HAT = np.array([0.0, 0.0, 1.0])
-
-X_HAT_NEG = np.array([-1.0, 1.0, 1.0])
-Y_HAT_NEG = np.array([1.0, -1.0, 1.0])
-Z_HAT_NEG = np.array([1.0, 1.0, -1.0])
-
-TAU = 2.0 * np.pi
-FULL = TAU
+from modeling import view, ops
+from modeling.types import Mesh, Verts, Verts2D, Point3, AABB
 
 
 def tm(verts, faces):  # pylint: disable=invalid-name
@@ -63,85 +52,18 @@ def rev(xs: Any) -> List:
     return list(reversed(xs))
 
 
-def rotation_x(angle: float) -> Mat33:
-    """create matrix for rotation around x axis"""
-    return trimesh.transformations.rotation_matrix(angle, X_HAT)[0:3, 0:3]
-
-
-def rotation_y(angle: float) -> Mat33:
-    """create matrix for rotation around y axis"""
-    return trimesh.transformations.rotation_matrix(angle, Y_HAT)[0:3, 0:3]
-
-
-def rotation_z(angle: float) -> Mat33:
-    """create matrix for rotation around z axis"""
-    return trimesh.transformations.rotation_matrix(angle, Z_HAT)[0:3, 0:3]
-
-
-def translate_mesh(mesh: Mesh, trans: Vec3) -> Mesh:
-    """translate a mesh"""
-    return mesh[0] + trans, mesh[1]
-
-
-def rotate_mesh(mesh: Mesh, rot_mat: np.ndarray) -> Mesh:
-    """rotate a mesh"""
-    assert rot_mat.shape == (3, 3), 'rotate_mesh requires 3x3 matrix'
-
-    verts, faces = mesh
-    verts = rotate_verts(verts, rot_mat)
-    return verts, faces
-
-
-def scale_mesh(mesh: Mesh, amount: Vec3) -> Mesh:
-    """scale a mesh"""
-    return scale(mesh[0], amount), mesh[1]
-
-
-def rotate_verts(verts: Verts, rot_mat: np.ndarray) -> np.ndarray:
-    """rotate verts"""
-    assert rot_mat.shape == (3, 3), 'rotate_verts requires 3x3 matrix'
-    return np.transpose(np.dot(rot_mat, np.transpose(verts)))
-
-
-def rotate_vec(vec: Vec3, rot_mat: np.ndarray) -> np.ndarray:
-    """rotate a single vector"""
-    assert rot_mat.shape == (3, 3), 'rotate_vec requires 3x3 matrix'
-    return np.transpose(np.dot(rot_mat, np.transpose(np.array([vec]))))[0, :]
-
-
-def transform_mesh(mesh: Mesh, mat: np.ndarray) -> Mesh:
-    """transform mesh"""
-
-    assert mat.shape == (4, 4), 'transform_mesh requires 4x4 matrix'
-
-    verts, faces = mesh
-
-    rot = mat[0:3, 0:3]
-    trans = mat[0:3, 3:4]
-
-    verts_new = np.transpose(
-        np.dot(rot, np.transpose(verts)) + trans)
-
-    return verts_new, faces
-
-    # gut check
-    # trimesh = tm(*mesh)
-    # trimesh = trimesh.copy().apply_transform(mat)
-    # return trimesh.vertices, trimesh.faces
-
-
 def spin(mesh, n_dups, offset):
     """repeate meshes in a circle"""
     # also sometimes known as "circular array"
     return [
-        rotate_mesh(mesh, rotation_y(x / n_dups * FULL + offset))
+        ops.rotate_mesh(mesh, ops.rotation_y(x / n_dups * ops.FULL + offset))
         for x in range(n_dups)]
 
 
 def spin_frac(mesh, n_dups, offset, frac):
     """repeat meshes in a fraction of a circle, including start and end"""
     return [
-        rotate_mesh(mesh, rotation_y(x / (n_dups - 1) * frac + offset))
+        ops.rotate_mesh(mesh, ops.rotation_y(x / (n_dups - 1) * frac + offset))
         for x in range(n_dups)]
 
 
@@ -171,20 +93,6 @@ def attach_y(xz: np.ndarray, y: float) -> np.ndarray:
 
 # ~~~~ operations on vertices
 
-# TODO: update signatures
-
-def scale_xz(xyz: np.ndarray, scale: float) -> np.ndarray:
-    """scale the xz dimensions of 3D points"""
-    xz = xyz[:, [0, 2]]
-    xz = xz * scale
-    return np.concatenate([xz[:, 0:1], xyz[:, 1:2], xz[:, 1:2]], axis=1)
-
-
-def scale(xyz: np.ndarray, scale: np.ndarray) -> np.ndarray:
-    """scale all dimensions"""
-    return xyz * scale
-
-
 def shift(xyz: np.ndarray, trans: np.ndarray) -> np.ndarray:
     """translate all dimensions"""
     return xyz + trans
@@ -210,7 +118,7 @@ def circle_point(angle: float, radius: float) -> Tuple[float, float]:
 def points_around_circle(n_points: int, start: float, radius: float) -> List[Tuple[float, float]]:
     """find a list of evenly space points around a circle"""
     return [
-        circle_point(x * 1.0 * TAU / n_points + start, radius)
+        circle_point(x * 1.0 * ops.TAU / n_points + start, radius)
         for x in range(n_points)]
 
 
@@ -343,30 +251,6 @@ def plot_points_2d(points):
         points[:, 0], points[:, 1],
         color='blue')
     plt.show()
-
-
-def mirror_x(mesh: Mesh) -> Mesh:
-    """mirror mesh in x dimension (across y axis)"""
-    return (
-        mesh[0] * np.array([X_HAT_NEG]),
-        mesh[1][:, [2, 1, 0]]
-    )
-
-
-def mirror_y(mesh: Mesh) -> Mesh:
-    """mirror mesh in y dimension"""
-    return (
-        mesh[0] * np.array([Y_HAT_NEG]),
-        mesh[1][:, [2, 1, 0]]
-    )
-
-
-def mirror_z(mesh: Mesh) -> Mesh:
-    """mirror mesh in z dimension (across x axis)"""
-    return (
-        mesh[0] * np.array([Z_HAT_NEG]),
-        mesh[1][:, [2, 1, 0]]
-    )
 
 
 def adjust_verts(verts: Verts, select: Callable, modify: Callable) -> Verts:
@@ -539,16 +423,6 @@ def symmetrize(mesh: Mesh, plane_normal) -> Mesh:
     print('after process:', tm_mesh_whole.vertices.shape, tm_mesh_whole.faces.shape)
 
     return tm_mesh_whole.vertices, tm_mesh_whole.faces
-
-
-def vapply(mesh: Mesh, fn, **kwargs) -> Mesh:
-    """apply a function to vertices of a mesh"""
-    return fn(mesh[0], **kwargs), mesh[1]
-
-
-def fapply(mesh: Mesh, fn, **kwargs) -> Mesh:
-    """apply a function to the faces of a mesh"""
-    return mesh[0], fn(mesh[1], **kwargs)
 
 
 def remove_bad_faces(faces: np.ndarray) -> np.ndarray:
