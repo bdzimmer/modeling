@@ -11,7 +11,8 @@ from typing import List, Tuple, Optional, Callable, Union
 import numpy as np
 
 from modeling import util, ops
-from modeling.types import Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3
+from modeling.types import \
+    Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3, vec
 from modeling.util import attach_y
 
 
@@ -378,3 +379,57 @@ def solid_from_cuts(
         cutters.append(cutter_transf)
 
     return mesh, cutters
+
+
+def solid_from_polygon_triangular(
+        pts: np.ndarray,
+        width: float,
+        height: float
+        ) -> Mesh:
+    """create a solid from a 2D polygon"""
+
+    assert pts.shape[1] == 2
+
+    # TODO: do without repeated rib / process
+    cutter = solid_from_ribs(
+        [
+            util.attach_z(pts, -height / 2),
+            util.attach_z(util.inset_polygon(pts, width / 2), height / 2),
+            util.attach_z(util.inset_polygon(pts, -width / 2), height / 2),
+            util.attach_z(pts, -height / 2)  # hack hack hack
+        ],
+        None,
+        None
+    )
+    cutter = util.process(cutter)
+
+    return cutter
+
+
+def solid_from_polygon_rectangular(
+        pts: np.ndarray,
+        width: float,
+        height: float
+        ) -> Mesh:
+    """create a solid from a 2D polygon"""
+
+    assert pts.shape[1] == 2
+
+    inset_pos = util.inset_polygon(pts, width / 2)
+    inset_neg = util.inset_polygon(pts, -width / 2)
+
+    # TODO: do without repeated rib / process
+    cutter = solid_from_ribs(
+        [
+            util.attach_z(inset_pos, -height / 2),
+            util.attach_z(inset_pos, height / 2),
+            util.attach_z(inset_neg, height / 2),
+            util.attach_z(inset_neg, -height / 2),
+            util.attach_z(inset_pos, -height / 2)  # hack hack hack
+        ],
+        None,
+        None
+    )
+    cutter = util.process(cutter)
+
+    return cutter
