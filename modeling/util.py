@@ -19,7 +19,7 @@ import numpy as np
 import pyrender
 
 from modeling import view, ops
-from modeling.types import Mesh, Verts, Verts2D, Point3, AABB
+from modeling.types import Mesh, Verts, Verts2D, Point3, AABB, Vec3
 
 
 def tm(verts, faces):  # pylint: disable=invalid-name
@@ -476,3 +476,31 @@ def autosmooth(mesh: Mesh, angle: float) -> Mesh:
     """a wrapper around trimeshes autosmooth-like functionality"""
     smoothed_tm = tm(*mesh).smoothed(angle=angle)
     return smoothed_tm.vertices, smoothed_tm.faces
+
+
+def tri_normal(verts: Union[List[Point3], Verts]) -> Vec3:
+    """find the surface normal of a triangle"""
+    seg_0 = verts[1] - verts[0]
+    seg_1 = verts[2] - verts[0]
+    res = np.cross(seg_0, seg_1)
+    return res / np.linalg.norm(res)
+
+
+def tri_area(verts: Union[List[Point3], Verts]) -> Vec3:
+    """find the area of a triangle"""
+    seg_0 = verts[1] - verts[0]
+    seg_1 = verts[2] - verts[0]
+    return 0.5 * np.linalg.norm(np.cross(seg_0, seg_1))
+
+
+def is_triangle_pair_convex(
+        a: Point3,
+        b: Point3,
+        c: Point3,
+        d: Point3) -> bool:
+    """test whether a pair of triangles (abc, adb) are convex or concave."""
+    norm_0 = tri_normal([a, b, c])
+    norm_1 = tri_normal([a, d, b])
+    rot = np.cross(norm_0, norm_1)
+    shared_edge = b - a
+    return np.dot(rot, shared_edge) > 0
