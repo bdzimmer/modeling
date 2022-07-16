@@ -12,7 +12,7 @@ import numpy as np
 
 from modeling import util, ops
 from modeling.types import \
-    Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3, vec
+    Verts2D, Mesh, Verts, Point3, vec3, Faces, MeshExtended, Vec3
 from modeling.util import attach_y
 
 
@@ -34,6 +34,25 @@ def solid_from_ribs(
 
     if pt_end is not None:
         mesh, ex_idxs, _ = extend_to_cap(mesh, util.loop(ex_idxs), pt_end)
+
+    return mesh
+
+
+def solid_from_ribs_loop(ribs: List[Verts]) -> Mesh:
+    """
+    Make a solid from a list of 3d ribs,
+    connecting the first and last.
+    Useful for torus-like objects.
+    """
+
+    mesh = ribs[0], np.empty((0, 3), dtype=np.int)
+    ex_idxs = list(range(mesh[0].shape[0]))
+    ex_idxs_start = ex_idxs
+
+    for rib in ribs[1:]:
+        mesh, ex_idxs, _ = extend_link_loop(mesh, ex_idxs, rib)
+
+    mesh, _ = extend_existing(mesh, ex_idxs, ex_idxs_start, link_loop)
 
     return mesh
 
@@ -390,18 +409,11 @@ def solid_from_polygon_triangular(
 
     assert pts.shape[1] == 2
 
-    # TODO: do without repeated rib / process
-    cutter = solid_from_ribs(
-        [
-            util.attach_z(pts, -height / 2),
-            util.attach_z(util.inset_polygon(pts, width / 2), height / 2),
-            util.attach_z(util.inset_polygon(pts, -width / 2), height / 2),
-            util.attach_z(pts, -height / 2)  # hack hack hack
-        ],
-        None,
-        None
-    )
-    cutter = util.process(cutter)
+    cutter = solid_from_ribs_loop([
+        util.attach_z(pts, -height / 2),
+        util.attach_z(util.inset_polygon(pts, width / 2), height / 2),
+        util.attach_z(util.inset_polygon(pts, -width / 2), height / 2)
+    ])
 
     return cutter
 
@@ -418,18 +430,11 @@ def solid_from_polygon_rectangular(
     inset_pos = util.inset_polygon(pts, width / 2)
     inset_neg = util.inset_polygon(pts, -width / 2)
 
-    # TODO: do without repeated rib / process
-    cutter = solid_from_ribs(
-        [
-            util.attach_z(inset_pos, -height / 2),
-            util.attach_z(inset_pos, height / 2),
-            util.attach_z(inset_neg, height / 2),
-            util.attach_z(inset_neg, -height / 2),
-            util.attach_z(inset_pos, -height / 2)  # hack hack hack
-        ],
-        None,
-        None
-    )
-    cutter = util.process(cutter)
+    cutter = solid_from_ribs_loop([
+        util.attach_z(inset_neg, -height / 2),
+        util.attach_z(inset_neg, height / 2),
+        util.attach_z(inset_pos, height / 2),
+        util.attach_z(inset_pos, -height / 2)
+    ])
 
     return cutter
