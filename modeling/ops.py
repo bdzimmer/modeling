@@ -1,5 +1,5 @@
 """
-Mesh operations.
+Various transformations and mesh operations.
 """
 
 # Copyright (c) 2022 Ben Zimmer. All rights reserved.
@@ -145,3 +145,11 @@ def vapply(mesh: Mesh, fn, **kwargs) -> Mesh:
 def fapply(mesh: Mesh, fn, **kwargs) -> Mesh:
     """apply a function to the faces of a mesh"""
     return mesh[0], fn(mesh[1], **kwargs)
+
+
+def normalize(vec):
+    """
+    Normalize a vector.
+    Doesn't check for zero divide.
+    """
+    return vec / np.linalg.norm(vec)
