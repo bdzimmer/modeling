@@ -11,11 +11,10 @@ import pickle
 import os
 import json
 import sys
-from typing import Optional
+from typing import Optional, Dict
 
 import bpy
 import bpy.types as btypes
-
 
 CODE_DIR_PATH = os.path.dirname(os.path.dirname(__file__))
 
@@ -50,6 +49,7 @@ class ConfigKeys:
     ORTHO_SCALE_KEY = 'ortho_scale'
     RENDER_EEVEE_USE_BLOOM_KEY = 'render_eevee_use_bloom'
     RENDER_USE_EEVEE_KEY = 'render_use_eevee'
+    EEVEE_CONFIG = 'eevee'
     CYCLES_GPU_KEY = 'cycles_gpu'
     ANIMATION_USE_EEVEE_KEY = 'animation_use_eevee'
     RENDER_RESOLUTION_KEY = 'render_resolution'
@@ -60,6 +60,16 @@ class ConfigKeys:
     DO_RENDER_KEY = 'do_render'
     RENDER_BLENDER_KEY = 'render_blender'
     WORLD_KEY = 'world'
+
+    EEVEE_CONFIG_BLOOM = 'bloom'
+    EEVEE_CONFIG_SHADOW_CASCADE_SIZE = 'shadow_cascade_size'
+    EEVEE_CONFIG_AMBIENT_OCCLUSION = 'ambient_occlusion'
+
+
+# camera config keys
+CAMERA_FOV = 'fov'
+CAMERA_CLIP_START = 'clip_start'
+CAMERA_CLIP_END = 'clip_end'
 
 
 def main(args):
@@ -115,6 +125,8 @@ def main(args):
     center = config_render[Ck.CENTER_KEY]
     pos = config_render[Ck.SIZE_KEY] * scale
     clip_end = config_render[Ck.SIZE_KEY] * clip_scale
+    # for now
+    config['camera'][CAMERA_CLIP_END] = clip_end
 
     world_config = config_render.get(Ck.WORLD_KEY, {})
 
@@ -213,16 +225,7 @@ def main(args):
 
     # for now assume one camera
 
-    bpy.ops.object.camera_add()
-    cam = bpy.context.object
-    cam.name = 'Camera'
-    cam.data.clip_end = clip_end
-
-    fov = config['camera'].get('fov')
-    if fov is not None:
-        cam.data.lens_unit = 'FOV'
-        cam.data.angle = math.radians(fov)
-
+    cam = create_camera(config['camera'])
     bpy.context.scene.camera = cam
 
     # ~~~~ load models
@@ -289,7 +292,14 @@ def main(args):
         samples=CYCLES_RENDER_SAMPLES,
         preview_samples=CYCLES_PREVIEW_SAMPLES,
         gpu=cycles_gpu)
-    scene.eevee.use_bloom = render_eevee_use_bloom
+
+    config_eevee = config_render.get(Ck.EEVEE_CONFIG)
+    if Ck.EEVEE_CONFIG_BLOOM in config_eevee:
+        scene.eevee.use_bloom = config_eevee[Ck.EEVEE_CONFIG_BLOOM]
+    if Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE in config_eevee:
+        scene.eevee.shadow_cascade_size = config_eevee[Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE]
+    if Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION in config_eevee:
+        scene.eevee.use_gtao = config_eevee[Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION]
 
     scene.render.resolution_x = render_resolution[0]
     scene.render.resolution_y = render_resolution[1]
@@ -538,6 +548,28 @@ def add_compositor_nodes(scene: bpy.types.Scene):
         scene,
         links
     )
+
+
+def create_camera(cam_config: Dict) -> btypes.Camera:
+    """create a camera"""
+    bpy.ops.object.camera_add()
+    cam = bpy.context.object
+    cam.name = 'Camera'
+
+    fov = cam_config.get(CAMERA_FOV)
+    if fov is not None:
+        cam.data.lens_unit = 'FOV'
+        cam.data.angle = math.radians(fov)
+
+    clip_start = cam_config.get(CAMERA_CLIP_START)
+    if clip_start is not None:
+        cam.data.clip_start = clip_start
+
+    clip_end = cam_config.get(CAMERA_CLIP_END)
+    if clip_end is not None:
+        cam.data.clip_end = clip_end
+
+    return cam
 
 
 main(butil.find_args(sys.argv))
