@@ -6,10 +6,10 @@ Functions for loading materials into Blender.
 
 # Copyright (c) 2021 Ben Zimmer. All rights reserved.
 
-
+import os
 import importlib
 import sys
-from typing import List, Tuple, Any, Union
+from typing import List, Tuple, Any, Union, Dict
 
 import bpy
 import bpy.types as btypes
@@ -85,3 +85,34 @@ def matlib_select(lib_name: str, mat_name: str) -> None:
             break
     else:
         print(f'material {mat_name} not found')
+
+
+def find_material_assetlib_blends(lib_name: str) -> Dict[str, str]:
+    """find which blend files contain which materials for an asset library"""
+
+    # https://blender.stackexchange.com/questions/244971/how-do-i-get-all-assets-in-a-given-userassetlibrary-with-the-python-api
+
+    libs = bpy.context.preferences.filepaths.asset_libraries
+    lib = [x for x in libs if x.name == lib_name][0]
+    blend_file_names = [x for x in os.listdir(lib.path) if x.endswith('.blend')]
+    res = {}
+    for blend_file_name in blend_file_names:
+        blend_file_path = os.path.join(lib.path, blend_file_name)
+        with bpy.data.libraries.load(blend_file_path, assets_only=True) as (data_from, _):
+            for mat_name in data_from.materials:
+                res[mat_name] = blend_file_path
+    return res
+
+
+def find_material_assetlib(lib_name: str, mat_name: str) -> btypes.Material:
+    """find a material in asset libraries"""
+
+    # TODO: this seems pretty fast for a few materials but may be inefficient for many
+    mat_name_to_path = find_material_assetlib_blends(lib_name)
+    blend_file_path = mat_name_to_path[mat_name]
+
+    # load and append the material
+    with bpy.data.libraries.load(blend_file_path, assets_only=True) as (data_from, data_to):
+        data_to.materials = [mat_name]
+    mat = bpy.data.materials.get(mat_name)
+    return mat

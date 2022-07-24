@@ -246,6 +246,7 @@ def add_material(
     instance_dict = mat.get(MaterialKeys.INSTANCE)
     mat_python = mat.get(MaterialKeys.PYTHON)
     matlib_dict = mat.get(MaterialKeys.MATLIB)
+    assetlib_dict = mat.get(MaterialKeys.ASSETLIB)
 
     if instance_dict is not None:
         # instance a material that already exists in the scene
@@ -305,6 +306,13 @@ def add_material(
             func_desc=mat_python[MaterialKeys.PYTHON_FUNC],
             paths=mat_python[MaterialKeys.PYTHON_PATHS]
         )
+
+    elif assetlib_dict is not None:
+        material = materials.find_material_assetlib(
+            assetlib_dict[MaterialKeys.ASSETLIB_LIB_NAME],
+            assetlib_dict[MaterialKeys.ASSETLIB_MAT_NAME])
+        # note that loaded node groups are still marked as assets
+        material.asset_clear()
 
     else:
         # create a new material for the object

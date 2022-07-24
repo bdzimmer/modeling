@@ -299,6 +299,7 @@ class MaterialKeys:
     INSTANCE = 'instance'
     PYTHON = 'python'
     MATLIB = 'matlib'
+    ASSETLIB = 'assetlib'
 
     PYTHON_FUNC = 'func'
     PYTHON_PATHS = 'paths'
@@ -308,6 +309,9 @@ class MaterialKeys:
 
     MATLIB_LIB_NAME = 'lib_name'
     MATLIB_MAT_NAME = 'mat_name'
+
+    ASSETLIB_LIB_NAME = 'lib_name'
+    ASSETLIB_MAT_NAME = 'mat_name'
 
     NAME = 'name'
     COPY = 'copy'

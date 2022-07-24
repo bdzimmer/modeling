@@ -294,12 +294,13 @@ def main(args):
         gpu=cycles_gpu)
 
     config_eevee = config_render.get(Ck.EEVEE_CONFIG)
-    if Ck.EEVEE_CONFIG_BLOOM in config_eevee:
-        scene.eevee.use_bloom = config_eevee[Ck.EEVEE_CONFIG_BLOOM]
-    if Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE in config_eevee:
-        scene.eevee.shadow_cascade_size = config_eevee[Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE]
-    if Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION in config_eevee:
-        scene.eevee.use_gtao = config_eevee[Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION]
+    if config_eevee is not None:
+        if Ck.EEVEE_CONFIG_BLOOM in config_eevee:
+            scene.eevee.use_bloom = config_eevee[Ck.EEVEE_CONFIG_BLOOM]
+        if Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE in config_eevee:
+            scene.eevee.shadow_cascade_size = config_eevee[Ck.EEVEE_CONFIG_SHADOW_CASCADE_SIZE]
+        if Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION in config_eevee:
+            scene.eevee.use_gtao = config_eevee[Ck.EEVEE_CONFIG_AMBIENT_OCCLUSION]
 
     scene.render.resolution_x = render_resolution[0]
     scene.render.resolution_y = render_resolution[1]
