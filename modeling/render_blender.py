@@ -191,11 +191,18 @@ def main(args):
                 # are loading the material by name from the materials library
                 if Mk.NAME in material:
                     material_name = material[Mk.NAME]
-                else:
+                elif Mk.MATLIB in material:
                     material_name = (
                         material[Mk.MATLIB][Mk.MATLIB_LIB_NAME] + ' / ' +
                         material[Mk.MATLIB][Mk.MATLIB_MAT_NAME]
                     )
+                elif Mk.ASSETLIB in material:
+                    material_name = (
+                        material[Mk.ASSETLIB][Mk.ASSETLIB_LIB_NAME] + ' / ' +
+                        material[Mk.ASSETLIB][Mk.ASSETLIB_MAT_NAME]
+                    )
+                else:
+                    material_name = 'empty'
 
                 msc.add_model(
                     types.ConfigModel(
