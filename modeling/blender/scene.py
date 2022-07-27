@@ -337,34 +337,38 @@ def add_material(
     updates = mat.get(MaterialKeys.UPDATES)
     if updates is not None:
         for update in updates:
-
-            value = update['value']
-
-            # this is a bit of a hack
-            if isinstance(value, str) and value.startswith('object:'):
-                value = butil.get_obj_by_name(value[7:])
-
-            node_name = update['node']
-            node = material.node_tree.nodes.get(node_name)
-            if node is None:
-                for node_cur in material.node_tree.nodes:
-                    if node_cur.label == node_name:
-                        node = node_cur
-                        break
-
-            node_input_name = update.get('input')
-            node_output_name = update.get('output')
-            node_attr_name = update.get('attr')
-            if node_input_name is not None:
-                node_input = node.inputs[node_input_name]
-                node_input.default_value = value
-            elif node_output_name is not None:
-                node_output = node.outputs[node_output_name]
-                node_output.default_value = value
-            elif node_attr_name is not None:
-                setattr(node, node_attr_name, value)
+            update_material(material, update)
 
     return material
+
+
+def update_material(material: btypes.Material, update: Dict) -> None:
+    """apply an update to a material"""
+    value = update['value']
+
+    # TODO: this is a bit of a hack
+    if isinstance(value, str) and value.startswith('object:'):
+        value = butil.get_obj_by_name(value[7:])
+
+    node_name = update['node']
+    node = material.node_tree.nodes.get(node_name)
+    if node is None:
+        for node_cur in material.node_tree.nodes:
+            if node_cur.label == node_name:
+                node = node_cur
+                break
+
+    node_input_name = update.get('input')
+    node_output_name = update.get('output')
+    node_attr_name = update.get('attr')
+    if node_input_name is not None:
+        node_input = node.inputs[node_input_name]
+        node_input.default_value = value
+    elif node_output_name is not None:
+        node_output = node.outputs[node_output_name]
+        node_output.default_value = value
+    elif node_attr_name is not None:
+        setattr(node, node_attr_name, value)
 
 
 def set_prop(

@@ -285,6 +285,19 @@ def main(args):
                 coll.objects.unlink(light_obj)
             bpy.data.collections[collection_name].objects.link(light_obj)
 
+    # ~~~~ material updates
+
+    msc.PROFILER.tick('material updates')
+
+    material_updates = config.get('material_updates')
+    if material_updates is not None:
+        for name, updates in material_updates.items():
+            material = bpy.data.materials.get(name)
+            for update in updates:
+                msc.update_material(material, update)
+
+    msc.PROFILER.tock('material updates')
+
     # ~~~~ render settings
 
     # set background color
