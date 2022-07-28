@@ -279,6 +279,7 @@ class PropsKeys:
     BLENDER_BEVEL = 'blender:bevel'
     BLENDER_BEVEL_WIDTH = 'width'
     BLENDER_CHILD_OF = "blender:child_of"
+    BLENDER_CUSTOM_PROPERTY = 'blender:custom_property'
 
 
 class TransformationKeys:

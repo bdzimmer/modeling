@@ -457,6 +457,17 @@ def set_prop(
         child_of.use_rotation_z = False
         child_of.inverse_matrix = mathutils.Matrix.Identity(4)
 
+    elif prop_type == PropsKeys.BLENDER_CUSTOM_PROPERTY:
+        name = prop_dict['name']
+        obj[name] = tuple(prop_dict['value'])
+        ui = obj.id_properties_ui(name)
+        ui.update(description=name)
+        # for idx, x in enumerate(prop_dict['value']):
+        #     obj[name][idx] = x
+        # refresh materials to be able to see custom properties
+        if obj.data.materials:
+            obj.active_material = obj.active_material
+
 
 def set_transformation(
         obj: bpy.types.Object,
